@@ -11,12 +11,11 @@ import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
 import jsclub.codefest2024.sdk.model.Inventory;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
-    private static final String GAME_ID = "121501";
+    private static final String GAME_ID = "181014";
     private static final String PLAYER_NAME = "Nguoi Lua Gian Doi";
 
     private static Node add(Node x, Node y) {
@@ -48,6 +47,7 @@ public class Main {
                     return false;
                 }
             }
+
             void bfs() {
                 int[] dx = { 0, 0, 1, -1 };
                 int[] dy = { 1, -1, 0, 0 };
@@ -117,9 +117,6 @@ public class Main {
                 g.get(myPos.getX()).set(myPos.getY(), 0);
                 while (!queue.isEmpty()) {
                     Node u = queue.poll();
-                    if (u.x == 120 || u.y == 120) {
-                        System.out.println("asdf");
-                    }
                     if (isChestNodes.get(u.x).get(u.y)) {
                         continue;
                     }
@@ -186,6 +183,7 @@ public class Main {
                 }
                 return nearestNode;
             }
+
             void getChest(Node target) {
                 try {
                     int distanceChest = distance(target);
@@ -222,6 +220,16 @@ public class Main {
                 }
             }
 
+            int getGainArmor(Armor armor) {
+                List<Armor> listArmors = hero.getInventory().getListArmor();
+                for (Armor currentArmor : listArmors) {
+                    if (currentArmor.getId() == armor.getId()) {
+                        return 0;
+                    }
+                }
+                return armor.getDamageReduce();
+            }
+
             void calculateOptimizedMove(List<Node> otherPlayers, List<Node> BlocksNodes) {
                 try {
                     Player me = gameMap.getCurrentPlayer();
@@ -249,9 +257,10 @@ public class Main {
                         if (nearestArmor != null && (myArmors.size() == 0
                                 || (myArmors.size() == 1 && (myArmors.get(0).getDamageReduce() == 20
                                         || nearestArmor.getDamageReduce() == 20)))) {
-                            pointItems.set(2, me.getHp() * nearestArmor.getDamageReduce());
+                            pointItems.set(2, getGainArmor(nearestArmor) * 300);
                         }
-                        pointItems.set(3, 130 * 100);
+                        int myStrength = me.getHp() * me.getHp() / 100 * (me.getDamageReduction() + 100);
+                        pointItems.set(3, myStrength);
                         List<Node> target = new ArrayList<>();
                         target.add(nearestHealth);
                         target.add(nearestChest);
@@ -269,23 +278,18 @@ public class Main {
                                 pointItems.set(i, 0);
                             }
                         }
-                        Boolean danger=false;
-                        Boolean moved=false;
-                        for(Node p:BlocksNodes)
-                        {
-                            if(p.getX()==myPos.getX() && p.getY()==myPos.getY())
-                            {
-                                danger=true;
+                        Boolean danger = false;
+                        Boolean moved = false;
+                        for (Node p : BlocksNodes) {
+                            if (p.getX() == myPos.getX() && p.getY() == myPos.getY()) {
+                                danger = true;
                                 break;
                             }
                         }
-                        if(!danger&&distance(nearestPlayer)>8)
-                        {
+                        if (!danger && distance(nearestPlayer) > 8) {
                             List<HealingItem> myItems = myInventory.getListHealingItem();
                             for (HealingItem item : myItems) {
-                                int gainHp = Math.min(item.getHealingHP(), 100 - me.getHp());
-                                int wasteHp = item.getHealingHP() - gainHp;
-                                if (gainHp >= wasteHp * 2) {
+                                if (me.getHp() < 100) {
                                     hero.useItem(item.getId());
                                     moved = true;
                                     break;
@@ -389,7 +393,7 @@ public class Main {
                         boolean fire_or_move = false;
                         for (Node P : otherPlayers) {
                             if (Math.abs(P.getX() - myPos.getX())
-                                    + Math.abs(P.getY() - myPos.getY()) == 1&&fire_or_move==false) {
+                                    + Math.abs(P.getY() - myPos.getY()) == 1 && fire_or_move == false) {
                                 if (P.getX() == myPos.getX()) {
                                     if (P.getY() < myPos.getY()) {
                                         hero.attack("d");
@@ -407,9 +411,10 @@ public class Main {
                             }
                         }
                         for (Node P : otherPlayers) {
-                            if (Math.abs(P.getX() - myPos.getX()) == 1 && Math.abs(P.getY() - myPos.getY()) == 1&&fire_or_move==false) {
+                            if (Math.abs(P.getX() - myPos.getX()) == 1 && Math.abs(P.getY() - myPos.getY()) == 1
+                                    && fire_or_move == false) {
                                 hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, myPos, P, false));
-                                fire_or_move=true;
+                                fire_or_move = true;
                             }
                         }
                         if (fire_or_move) {
