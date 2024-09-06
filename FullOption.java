@@ -5,6 +5,7 @@ import jsclub.codefest2024.sdk.algorithm.PathUtils;
 import jsclub.codefest2024.sdk.base.Node;
 import jsclub.codefest2024.sdk.model.GameMap;
 import jsclub.codefest2024.sdk.model.enemies.Enemy;
+import jsclub.codefest2024.sdk.model.equipments.Armor;
 import jsclub.codefest2024.sdk.model.equipments.HealingItem;
 import jsclub.codefest2024.sdk.model.obstacles.Obstacle;
 import jsclub.codefest2024.sdk.model.players.Player;
@@ -15,16 +16,44 @@ import java.util.*;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
-    private static final String GAME_ID = "104985";
-    private static final String PLAYER_NAME = "TuanVM";
+    private static final String GAME_ID = "198892";
+    private static final String PLAYER_NAME = "ThuongChoTamThanCoHan,NgamNguiLangNhinConDoSangNgang";
 
-    private static final int CHESTGUN=35;
-    private static final int CHESTPLAYER=40;
-    private static final int ENEMY=3;
+
+    private static final List<Node> DIRECTION = Arrays.asList(new Node(0, 1), new Node(0, -1), new Node(1, 0),
+            new Node(-1, 0));
+    private static final int CHESTGUN=20;
+    private static final int CHESTPLAYER=25;
+    private static final int ENEMY=2;
     private static final int MAX=123456;
 
+    private static int lengthPath(Node x, Node y,List<Node> BlockNodes,GameMap gameMap) {
+
+        String path= PathUtils.getShortestPath(gameMap,BlockNodes,x,y,false);
+        if(path==null) {
+            int minDistance=MAX;
+            for(Node dir : DIRECTION) {
+                if(!BlockNodes.contains(add(dir,y))) {
+                    path=PathUtils.getShortestPath(gameMap,BlockNodes,x,add(dir,y),false);
+                    if(path!=null) {
+                        minDistance=Math.min(minDistance,path.length());
+                    }
+                }
+            }
+            if(minDistance==MAX) {
+                return distance(x,y);
+            }
+            else {
+                return minDistance;
+            }
+        }
+        else {
+            return path.length();
+        }
+    }//số bước để tới đích
+
     private static int distance(Node x, Node y) {
-        return Math.abs(x.x - y.x) + Math.abs(x.y - y.y);}
+        return Math.abs(x.x - y.x) + Math.abs(x.y - y.y);} // khoảng cách mahatan
 
     private static int dis_weapon(Node x, Weapon y) {
         return (Math.abs(x.x - y.x) + Math.abs(x.y - y.y))*360/y.getDamage();
@@ -36,15 +65,16 @@ public class Main {
     } // (node x + node y)
 
     public static boolean checkInsideSafeArea(Node x, int darkAreaSize, int mapSize) {
+        //darkAreaSize++;
         return x.x >= darkAreaSize && x.y >= darkAreaSize && x.x < mapSize - darkAreaSize && x.y < mapSize - darkAreaSize;
     }
 
-    private static Obstacle findNearestChest(Node currentNode, List<Obstacle> ListChest) {
+    private static Obstacle findNearestChest(Node currentNode, List<Obstacle> ListChest,List<Node> BlockNodes,GameMap gameMap) {
         Obstacle nearestChest = null;
         int minDistance = MAX;
 
         for (Obstacle chest : ListChest) {
-            int distanceToChest = distance(currentNode, chest);
+            int distanceToChest = lengthPath(currentNode, chest,BlockNodes,gameMap);
             if (distanceToChest < minDistance) {
                 minDistance = distanceToChest;
                 nearestChest = chest;
@@ -95,17 +125,28 @@ public class Main {
         }
         return 0;
 
-    }
+    }// hồi máu hợp lí
 
     // main tactic
     private static int try_gun_and_chest( Node currentNode, Hero hero,List<Node> OtherPlayerNodes, List<Node> BlocksNodes,
                                            GameMap gameMap, boolean is_enemy_coming) throws IOException {
-        // đã xử lí:
-        // súng, rương, người chơi khác ở ngoài darksize
-        // rương được chọn để đi đến ko còn nằm trong blocklist
-        // hồi màu, chọn đồ hồi máu tuỳ theo lượng máu còn lại
-        //
+
         if(is_enemy_coming) return 0;
+        Node nearestPlayerNode = OtherPlayerNodes.getFirst();
+        int minDisToPlayer = MAX;
+
+        for (Node P : OtherPlayerNodes) {
+            int disToPlayer = lengthPath(P, currentNode,BlocksNodes,gameMap);
+            if (disToPlayer < minDisToPlayer) {
+                minDisToPlayer = disToPlayer;
+                nearestPlayerNode = P;
+            }
+        } // find nearest player
+        if(checkInsideSafeArea(currentNode, gameMap.getDarkAreaSize(), gameMap.getMapSize()) &&
+            minDisToPlayer>10 && usingHealingItem(hero,gameMap)==1) {
+            System.out.println("Healing!!!!!");
+            return 1;
+        }
         Player Me=gameMap.getCurrentPlayer();
         List<Weapon> AllListGun=gameMap.getAllGun();
         List<Weapon> ListGun= new ArrayList<>();
@@ -121,21 +162,93 @@ public class Main {
         boolean pickedUpGun = HaveGun != null;
         System.out.println("Have gun?: " + pickedUpGun);
 
-        if (!pickedUpGun) {
+        Weapon curMelee = hero.getInventory().getMelee(); // Melee
+        boolean pickedBestMelee = curMelee.getId().equals("LIGHT_SABER");
+        System.out.println("Current melee?: " + curMelee.getId());
 
-            HealingItem nearestHealingItem = findNearestHealingItem(currentNode,gameMap.getListHealingItems());
-            if(nearestHealingItem!=null&&hero.getInventory().getListHealingItem().size()<4) {
-                if (currentNode.getX() == nearestHealingItem.getX() && currentNode.getY() == nearestHealingItem.getY()) {
-                    System.out.println("Picked up HealingItem");
+        int  numberHealItem=hero.getInventory().getListHealingItem().size();
+        boolean isFullHeal=(numberHealItem==4);
+        System.out.println("Have 4 heal item?: " + isFullHeal);
+
+        List<Armor> MyarmorList=hero.getInventory().getListArmor();
+        int numberArmor=MyarmorList.size();
+        boolean isFullArmor=(numberArmor==2);
+        System.out.println("Have 2 armor?: " + isFullArmor);
+
+        List<Weapon> meleeList = gameMap.getAllMelee();
+
+
+        // try to pick heal,armor and melee if (distance<=3)
+        Weapon nearestMelee = findNearestMelee(currentNode,BlocksNodes,gameMap,meleeList);
+        if(nearestMelee!=null && curMelee.getDamage()<nearestMelee.getDamage()) {
+            if (currentNode.getX() == nearestMelee.getX() && currentNode.getY() == nearestMelee.getY()) {
+                if(curMelee.getId().equals("HAND")) {
+                    System.out.println("Picked up Melee");
                     hero.pickupItem();
+
                 }
-                else {
-                    System.out.println("Move to healing item: " + nearestHealingItem);
-                    BlocksNodes.addAll(CHESTLISTNODE);
-                    hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestHealingItem, false));
+                else{
+                    hero.revokeItem(curMelee.getId());
                 }
                 return 1;
-            } // no gun, move to healing item and pick up if (distance <= 3)
+            }
+            System.out.println("Move to melee : " + nearestMelee);
+            BlocksNodes.addAll(CHESTLISTNODE);
+            hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestMelee, false));
+            return 1;
+        }  //move to melee item and pick up if near
+
+        HealingItem nearestHealingItem = findNearestHealingItem(currentNode,BlocksNodes,gameMap,gameMap.getListHealingItems());
+        if(nearestHealingItem!=null&&!isFullHeal) {
+            if (currentNode.getX() == nearestHealingItem.getX() && currentNode.getY() == nearestHealingItem.getY()) {
+
+                System.out.println("Picked up HealingItem");
+                hero.pickupItem();
+                return 1;
+            }
+            System.out.println("Move to healing item: " + nearestHealingItem);
+            BlocksNodes.addAll(CHESTLISTNODE);
+            hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestHealingItem, false));
+            return 1;
+        }  //move to healing item and pick up if near
+
+        Armor nearestArmor = findNearestArmor(currentNode,BlocksNodes,gameMap,gameMap.getListArmors());
+        if(nearestArmor!=null && !isFullArmor ) {
+
+            if (currentNode.getX() == nearestArmor.getX() && currentNode.getY() == nearestArmor.getY()) {
+
+                System.out.println("Picked up Armor");
+                hero.pickupItem();
+            }
+            else {
+                System.out.println("Move to armor item: " + nearestArmor);
+                BlocksNodes.addAll(CHESTLISTNODE);
+                hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestArmor, false));
+            }
+            return 1;
+        }  //move to armor item and pick up if near
+
+        boolean isFullSet=(isFullArmor&&isFullHeal&&pickedBestMelee);
+
+        if( minDisToPlayer<=3 && distance(currentNode,nearestPlayerNode)<=3){
+            if( (Me.getHp()>=50 && pickedBestMelee) ||
+                ( Me.getHp()>=60 && !curMelee.getId().equals("HAND") ) && minDisToPlayer<=2 && distance(currentNode,nearestPlayerNode)<=2 ){
+                if(distance(currentNode,nearestPlayerNode)==1){
+                    System.out.println("Attack player");
+                    String attackDirection = determineAttackDirection(currentNode, nearestPlayerNode);
+                    hero.attack(attackDirection);  // Tấn công player theo hướng xác định
+                }
+                else{
+                    System.out.println("Go to the next of player");
+                    hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestPlayerNode, false));
+                }
+                return 1;
+            }
+        }// chém khi có vũ khí xịn và gần địch
+
+        // pick gun or find other players
+        if (!pickedUpGun) {
+
             List<Weapon> weaponsList = new ArrayList<>(ListGun);
 
             Weapon nearestWeapon = null;
@@ -165,26 +278,24 @@ public class Main {
             }
             Obstacle nearestChest = null;
             if(!InsideChestList.isEmpty()){
-                nearestChest=findNearestChest(currentNode,InsideChestList);
+                nearestChest=findNearestChest(currentNode,InsideChestList,BlocksNodes,gameMap);
             }
             int distToChest = MAX;
             if(nearestChest!=null) {
-                distToChest=distance(currentNode, nearestChest);  // Khoảng cách đến rương
+                distToChest=lengthPath(currentNode, nearestChest,BlocksNodes,gameMap);  // Khoảng cách đến rương
             }
 
             int distToGun;
             if(nearestWeapon==null) distToGun=MAX;
-            else distToGun= distance(currentNode, nearestWeapon);  // Khoảng cách đến súng
-            System.out.println("[Size of InsideChestList]:"+InsideChestList.size());
-            System.out.println("[Chest: "+nearestChest+"]");
+            else distToGun= lengthPath(currentNode, nearestWeapon,BlocksNodes,gameMap);  // Khoảng cách đến súng
+
             // Quyết định dựa trên khoảng cách đến rương và súng
-            if (nearestChest!=null &&( (Me.getHp()<=60) ||(distToChest + CHESTGUN <= distToGun)) ) {
+            if (nearestChest!=null && ( (Me.getHp()<=60) ||(!isFullSet&&(distToChest + CHESTGUN <= distToGun))) ) {
                 boolean is_remove=false;
                 int cnt=0;
                 for(Node p:BlocksNodes) {
                     if(p.x==nearestChest.getX() && p.y==nearestChest.getY()) {
                         BlocksNodes.remove(cnt);
-                        System.out.println("Removed BlocksNode: "+p);
                         is_remove=true;
                         break;
                     }
@@ -193,7 +304,7 @@ public class Main {
                 System.out.println("Chest removed?:"+is_remove );
 
                 // Di chuyển đến vị trí liền kề với rương
-                if (distToChest > 1) {
+                if (distance(currentNode,nearestChest) > 1) {
                     System.out.println("Moving to nearest chest...");
                     for(Node p:CHESTLISTNODE) {
                         if(p.getX()!=nearestChest.getX() && p.getY()!=nearestChest.getY()) {
@@ -209,13 +320,11 @@ public class Main {
                     String attackDirection = determineAttackDirection(currentNode, nearestChest);
                     hero.attack(attackDirection);  // Tấn công rương theo hướng xác định
                 }
-                return 1;
             } // move to chest and break
             else {
                 System.out.println("Move to nearest Gun");
                 BlocksNodes.addAll(CHESTLISTNODE);
                 hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestWeapon, false));
-                return 1;
             } //move to gun
         } // no gun, find near healing item or chest or gun (not find player)
         else {
@@ -223,13 +332,9 @@ public class Main {
             Weapon curGun = hero.getInventory().getGun();
             boolean fire_or_move = false;
 
-
-            int dem = 0;
             for (Node P : OtherPlayerNodes) {
-                dem++;
-                System.out.println("[Player" + dem + ": " + P.getX() + " " + P.getY() + "]");
 
-                if (distance(P, currentNode) <= curGun.getRange()) { //curGun.getRange()
+                if (lengthPath(P, currentNode,BlocksNodes,gameMap) <= curGun.getRange() && !trapInMid(currentNode, P,gameMap.getListTraps())) {
                     if (P.getX() == currentNode.getX()) {
                         if (P.getY() < currentNode.getY()) {
                             hero.shoot("d");
@@ -250,40 +355,10 @@ public class Main {
 
             if (fire_or_move) {
                 System.out.println("Fired");
-                return 1;
             } else {
+
+                // Move to the nearest player or chest if not shooting
                 System.out.println("Move to player");
-
-                HealingItem nearestHealingItem = findNearestHealingItem(currentNode,gameMap.getListHealingItems());
-
-                if(nearestHealingItem!=null&&hero.getInventory().getListHealingItem().size()<4) {
-                    if (currentNode.getX() == nearestHealingItem.getX() && currentNode.getY() == nearestHealingItem.getY()) {
-
-                        System.out.println("Picked up HealingItem");
-                        hero.pickupItem();
-                        return 1;
-                    }
-                    System.out.println("Move to healing item: " + nearestHealingItem);
-                    BlocksNodes.addAll(CHESTLISTNODE);
-                    hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestHealingItem, false));
-                    return 1;
-                } // have gun, move to healing item and pick up if near
-
-                // Move to the nearest player if not shooting
-                Node nearestPlayerNode = OtherPlayerNodes.getFirst();
-                int minDisToPlayer = Integer.MAX_VALUE;
-
-                for (Node P : OtherPlayerNodes) {
-                    int disToPlayer = distance(P, currentNode);
-                    if (disToPlayer < minDisToPlayer) {
-                        minDisToPlayer = disToPlayer;
-                        nearestPlayerNode = P;
-                    }
-                } // find nearest player
-                if(minDisToPlayer>10&&usingHealingItem(hero,gameMap)==1) {
-                    System.out.println("Healing!!!!!");
-                    return 1;
-                }
 
                 List<Obstacle> ChestList=gameMap.getListChests();
                 List<Obstacle> InsideChestList = new ArrayList<>();
@@ -294,41 +369,40 @@ public class Main {
                 }
                 Obstacle nearestChest = null;
                 if(!InsideChestList.isEmpty()){
-                    nearestChest=findNearestChest(currentNode,InsideChestList);
+                    nearestChest=findNearestChest(currentNode,InsideChestList,BlocksNodes,gameMap);
                 }
                 int distToChest = MAX;
                 if(nearestChest!=null){
-                    distToChest=distance(currentNode, nearestChest);  // Khoảng cách đến rương
+                    distToChest=lengthPath(currentNode, nearestChest,BlocksNodes,gameMap);  // Khoảng cách đến rương
                 }
-                System.out.println("[Size of InsideChestList]:"+InsideChestList.size());
 
                 System.out.println("[Chest: "+nearestChest+"]");
 
-                int distToPlayer = distance(currentNode, nearestPlayerNode);
-                if (nearestChest!=null &&( (Me.getHp()<=60) ||(distToChest + CHESTPLAYER <= distToPlayer)) ) {
+                int distToPlayer = lengthPath(currentNode, nearestPlayerNode,BlocksNodes,gameMap);
+                if (nearestChest!=null &&( (Me.getHp()<=60) ||(!isFullSet && (distToChest + CHESTPLAYER <= distToPlayer)) )) {
 
-                    int cnt=0;
-                    boolean is_remove=false;
-                    for(Node p:BlocksNodes) {
-                        if(p.x==nearestChest.getX() && p.y==nearestChest.getY()) {
+                    int cnt = 0;
+                    boolean is_remove = false;
+                    for (Node p : BlocksNodes) {
+                        if (p.x == nearestChest.getX() && p.y == nearestChest.getY()) {
                             BlocksNodes.remove(cnt);
-                            System.out.println("Removed BlocksNode: "+p);
-                            is_remove=true;
+                            System.out.println("Removed Chest: " + p);
+                            is_remove = true;
                             break;
                         }
                         cnt++;
                     }
-                    System.out.println("Chest removed?:"+is_remove );                    // Di chuyển đến vị trí liền kề với rương
-                    if (distToChest > 1) {
+                    System.out.println("Chest removed?:" + is_remove);         // Di chuyển đến vị trí liền kề với rương
+                    if (distance(currentNode, nearestChest) > 1) {
                         System.out.println("Moving to nearest chest...");
-                        for(Node p:CHESTLISTNODE) {
-                            if(p.getX()!=nearestChest.getX() && p.getY()!=nearestChest.getY()) {
+                        for (Node p : CHESTLISTNODE) {
+                            if (p.getX() != nearestChest.getX() && p.getY() != nearestChest.getY()) {
                                 BlocksNodes.add(new Node(p.getX(), p.getY()));
                             }
                         }
-                        BlocksNodes.remove( new Node(nearestChest.getX(),nearestChest.getY())); // remove nearest chest from block node to find path to it
+                        BlocksNodes.remove(new Node(nearestChest.getX(), nearestChest.getY())); // remove nearest chest from block node to find path to it
 
-                        System.out.println("[Path to chest] "+PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestChest, false));
+                        System.out.println("[Path to chest] " + PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestChest, false));
                         hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestChest, false));  // Di chuyển đến vị trí liền kề rương
                     } else {
                         System.out.println("Breaking chest...");
@@ -340,46 +414,75 @@ public class Main {
                     return 1;
                 }
 
-                //System.out.println("[Current Hero]:" + currentNode.getX() + " " + currentNode.getY() + "] ");
-                System.out.println("[Nearest player:" + minDisToPlayer + "] ");
-                System.out.println("[Players: " + nearestPlayerNode.getX() + " " + nearestPlayerNode.getY()+"]");
-
-
                 BlocksNodes.remove(nearestPlayerNode);// xoá thằng này khỏi block để tìm đường đi
                 BlocksNodes.addAll(CHESTLISTNODE);
                 System.out.println("[Path]: " + PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestPlayerNode, false));
                 hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestPlayerNode, false));
-                return 1;
             }
 
         } // have gun, find near healing item or near player (not find chest)
-        //return 0;
+        return 1;
     }
 
-    private static String determineAttackDirection(Node currentNode, Obstacle nearestChest) {
-        if (nearestChest.getY() < currentNode.getY()) {
-            return "d";  // Rương nằm dưới
-        } else if (nearestChest.getY() > currentNode.getY()) {
-            return "u";  // Rương nằm trên
-        } else if (nearestChest.getX() < currentNode.getX()) {
-            return "l";  // Rương nằm bên trái
-        } else {
-            return "r";  // Rương nằm bên phải
+    private static boolean trapInMid(Node x, Node y, List<Obstacle> listTraps) {
+        for(Obstacle mid : listTraps){
+            if(distance(x,mid)+distance(mid,y)<distance(x, y)){
+                return true;
+            }
         }
-    } // hướng để phá rương
-    private static HealingItem findNearestHealingItem(Node currentNode, List<HealingItem> healthItems) {
+        return false;
+    }// check any trap in shoot line
+
+    private static Weapon findNearestMelee(Node currentNode, List<Node> BlocksNodes, GameMap gameMap, List<Weapon> meleeList) {
+        Weapon nearestMelee = null;
+        int minDistance = MAX;
+        for (Weapon item : meleeList) {
+            int distanceToItem = lengthPath(currentNode, item, BlocksNodes, gameMap);
+            if (distanceToItem <= 3 && distanceToItem < minDistance) {
+                minDistance = distanceToItem;
+                nearestMelee = item;
+            }
+        }
+        return nearestMelee;
+    }
+
+    private static HealingItem findNearestHealingItem(Node currentNode,List<Node> BlocksNodes,GameMap gameMap, List<HealingItem> healthItems) {
         HealingItem nearestHealingItem = null;
         int minDistance = MAX;
         for (HealingItem item : healthItems) {
-            int distanceToItem = distance(currentNode, item);
+            int distanceToItem = lengthPath(currentNode, item,BlocksNodes,gameMap);
             if (distanceToItem <= 3 && distanceToItem < minDistance) {
                 minDistance = distanceToItem;
                 nearestHealingItem = item;
             }
         }
-
         return nearestHealingItem;
     }
+
+    private static Armor findNearestArmor(Node currentNode, List<Node> BlocksNodes, GameMap gameMap, List<Armor> armorList) {
+        Armor nearestArmor = null;
+        int minDistance = MAX;
+        for (Armor item : armorList) {
+            int distanceToItem = lengthPath(currentNode, item, BlocksNodes, gameMap);
+            if (distanceToItem <= 3 && distanceToItem < minDistance) {
+                minDistance = distanceToItem;
+                nearestArmor = item;
+            }
+        }
+        return nearestArmor;
+    }
+
+    private static String determineAttackDirection(Node currentNode, Node target) {
+        if (target.getY() < currentNode.getY()) {
+            return "d";  // Target nằm dưới
+        } else if (target.getY() > currentNode.getY()) {
+            return "u";  // Target nằm trên
+        } else if (target.getX() < currentNode.getX()) {
+            return "l";  // Target nằm bên trái
+        } else {
+            return "r";  // Target nằm bên phải
+        }
+    } // hướng để phá rương
 
 
     public static void main(String[] args) throws IOException {
@@ -412,15 +515,9 @@ public class Main {
                     List<Enemy> ListEnemies = gameMap.getListEnemies(); // List of Enemies
 
                     List<Node> BlocksNodes = new ArrayList<>(); // BlocksNodes
-//                    for(int i=1;i<= gameMap.getMapSize();i++)
-//                        for(int j=1;j<=gameMap.getMapSize();j++)
-//                        {
-//                            if(!checkInsideSafeArea(new Node(i,j), gameMap.getDarkAreaSize(),gameMap.getMapSize())){
-//                                BlocksNodes.add(new Node(i,j));
-//                            }
-//                        }
+
                     boolean is_enemy_coming=false;
-                    for(Enemy E : ListEnemies){ //cách enemies ít nhất 4 đơn vị
+                    for(Enemy E : ListEnemies){ 
                         Node enemy=new Node(E.getX(),E.getY());
                         for(int i=-ENEMY;i<=ENEMY;++i)
                         {
@@ -442,11 +539,6 @@ public class Main {
 
                         BlocksNodes.add(new Node(O.getX(), O.getY()));
                     } // creat Blocknodes
-
-
-//                    Weapon MeleeName = hero.getInventory().getMelee(); // Melee
-//                    boolean pickedUpMelee = !MeleeName.getId().equals("HAND");
-//                    System.out.println("Have melee?: " + pickedUpMelee);
 
 
                     if(is_enemy_coming){
@@ -479,3 +571,4 @@ public class Main {
 
 
 }
+//Thiếu xử lí chạy vòng ra ngoài bo để chạy vào lại map sáng, cần thêm cơ chế hồi máu kể cả đang đừng ngoài bo
