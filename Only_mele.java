@@ -41,11 +41,7 @@ public class Main {
 
             <T extends Node> Boolean equal(T x, T y) {
 
-                if (x.getX() == y.getX() && x.getY() == y.getY()) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return x.getX() == y.getX() && x.getY() == y.getY();
             }
 
             void bfs() {
@@ -153,10 +149,10 @@ public class Main {
             }
 
             <T extends Node> T nearestNode(List<T> nodes, Boolean isChest) {
-                if (nodes.size() == 0) {
+                if (nodes.isEmpty()) {
                     return null;
                 }
-                T nearestNode = nodes.get(0);
+                T nearestNode = nodes.getFirst();
                 for (T node : nodes) {
 
                     if (isChest) {
@@ -283,8 +279,8 @@ public class Main {
                     System.out.println(pointItems.get(1));
                     System.out.println(pointItems.get(2));
                     System.out.println(pointItems.get(3));
-                    Boolean danger = false;
-                    Boolean moved = false;
+                    boolean danger = false;
+                    boolean moved = false;
                     for (Node p : BlocksNodes) {
                         if (p.getX() == myPos.getX() && p.getY() == myPos.getY()) {
                             danger = true;
@@ -301,7 +297,7 @@ public class Main {
                             }
                         }
                     }
-                    if (moved == true) {
+                    if (moved) {
                         return;
                     }
                     int maxPoint = Collections.max(pointItems);
@@ -372,7 +368,7 @@ public class Main {
                         int distanceMelee = distance(nearestMelee);
                         int distanceChest = distance(nearestChest);
                         // System.out.println(g.get(38).get(73));
-                         System.out.println(nearestChest.getX() + " " + nearestChest.getY());
+                        System.out.println(nearestChest.getX() + " " + nearestChest.getY());
                         // System.out.println(getPath(nearestChest));
                         // System.exit(0);
                         // System.out.println(distanceChest);
@@ -388,14 +384,14 @@ public class Main {
                         boolean fire_or_move = false;
                         for (Node P : otherPlayers) {
                             if (Math.abs(P.getX() - myPos.getX())
-                                    + Math.abs(P.getY() - myPos.getY()) == 1 && fire_or_move == false) {
+                                    + Math.abs(P.getY() - myPos.getY()) == 1 && !fire_or_move) {
                                 attack(P);
                                 fire_or_move = true;
                             }
                         }
                         for (Node P : otherPlayers) {
                             if (Math.abs(P.getX() - myPos.getX()) == 1 && Math.abs(P.getY() - myPos.getY()) == 1
-                                    && fire_or_move == false) {
+                                    && !fire_or_move) {
                                 hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, myPos, P, false));
                                 fire_or_move = true;
                             }
