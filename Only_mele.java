@@ -152,7 +152,7 @@ public class Main {
             }
 
             int distance(Node p) {
-                if (p == null) {
+                if (p == null || !PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize())) {
                     return 222222222;
                 }
                 return g.get(p.x).get(p.y);
