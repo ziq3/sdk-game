@@ -373,11 +373,10 @@ public class Main {
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon=weapon.getDamage()-meleeDame;
+                    pointWeapon = weapon.getDamage() - meleeDame;
                 }
-                if(weapon.getType()==ElementType.GUN)
-                {
-                    pointWeapon=weapon.getDamage()-gunDame;
+                if (weapon.getType() == ElementType.GUN) {
+                    pointWeapon = weapon.getDamage() - gunDame;
                 }
                 return pointWeapon * 100 / Math.max(distance(weapon), 1);
             }
@@ -501,7 +500,7 @@ public class Main {
                     for (Node p : otherPlayers) {
                         if (distance2(myPos, p) == 1) {
                             mAttack(p);
-                            meleeCooldown=melee.getCooldown();
+                            meleeCooldown = melee.getCooldown();
                             return;
                         }
                     }
@@ -514,9 +513,16 @@ public class Main {
                             } else {
                                 shoot("u");
                             }
-                            gunCooldown=gun.getCooldown();
-                            return;
                         }
+                        if (Math.abs(p.y - myPos.y) == 0 && Math.abs(p.x - myPos.x) <= gun.getRange()) {
+                            if (p.x < myPos.getX()) {
+                                shoot("l");
+                            } else {
+                                shoot("r");
+                            }
+                        }
+                        gunCooldown = gun.getCooldown();
+                        return;
                     }
                 }
                 if (haveThrow) {
