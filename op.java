@@ -16,7 +16,7 @@ import java.util.*;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
-    private static final String GAME_ID = "129935";
+    private static final String GAME_ID = "194526";
     private static final String PLAYER_NAME = "Nguoi Lua Gian Doi";
 
     private static Node add(Node x, Node y) {
@@ -38,14 +38,14 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Hero hero = new Hero(GAME_ID, PLAYER_NAME); // Our hero
         Emitter.Listener onMapUpdate = new Emitter.Listener() {
-            ArrayList<ArrayList<Integer>> g = new ArrayList<>();
-            ArrayList<ArrayList<Integer>> trace = new ArrayList<>();
-            GameMap gameMap = null;
-            Node myPos = null;
-            List<Node> restrictedNodes = new ArrayList<>();
-            List<Node> restrictedNodesWithoutPlayers = new ArrayList<>();
-            Inventory myInventory = null;
-            List<Node> otherPlayers = new ArrayList<>();
+            ArrayList<ArrayList<Integer>> g;
+            ArrayList<ArrayList<Integer>> trace;
+            GameMap gameMap;
+            Node myPos;
+            List<Node> restrictedNodes;
+            List<Node> restrictedNodesWithoutPlayers;
+            Inventory myInventory;
+            List<Node> otherPlayers;
             Player me;
             int meleeCooldown = 0;
             int gunCooldown = 0;
@@ -55,7 +55,8 @@ public class Main {
             boolean haveMelee;
             Weapon throwWeapon;
             boolean haveThrow;
-
+            int meleeDame;
+            int gunDame;
             <T extends Node> Boolean equal(T x, T y) {
 
                 return x.getX() == y.getX() && x.getY() == y.getY();
@@ -64,14 +65,25 @@ public class Main {
             void init() {
                 me = gameMap.getCurrentPlayer();
                 myInventory = hero.getInventory();
+                myPos = gameMap.getCurrentPlayer();
                 gun = myInventory.getGun();
                 haveGun = gun != null;
                 melee = myInventory.getMelee();
                 haveMelee = !melee.getId().equals("HAND");
                 throwWeapon = myInventory.getThrowable();
                 haveThrow = throwWeapon != null;
-                myPos = gameMap.getCurrentPlayer();
+                meleeDame=0;
+                gunDame=0;
+                if(haveMelee)
+                {
+                    meleeDame = melee.getDamage();
+                }
+                if(haveGun)
+                {
+                    gunDame = gun.getDamage();
+                }
                 restrictedNodes = new ArrayList<>();
+                otherPlayers = new ArrayList<>();
                 List<Obstacle> listConstruct = gameMap.getListTraps();
                 listConstruct.addAll(gameMap.getListIndestructibleObstacles());
                 listConstruct.addAll(gameMap.getListChests());
@@ -317,10 +329,20 @@ public class Main {
                 return armor.getDamageReduce() * 300 / Math.max(distance(armor), 1);
             }
 
+            int getPointHealth(int health) {
+                if (myInventory.getListHealingItem().size() == 4)
+                    return 0;
+                if (me.getHp() == 100) {
+                    return health * 50;
+                } else {
+                    return Math.min(100 - me.getHp(), health) * 200;
+                }
+            }
+
             int getPointHealth(HealingItem health) {
                 if (health == null)
                     return 0;
-                return ((100 - me.getHp()) * 2 + health.getHealingHP() / 2) * 100 / Math.max(distance(health), 1);
+                return getPointHealth(health.getHealingHP()) / Math.max(distance(health), 1);
             }
 
             int getPointPlayer(Node player) {
@@ -331,7 +353,9 @@ public class Main {
                         minDistance = distance(addNode);
                     }
                 }
-                return 100 * 100 / Math.max(minDistance, 1);
+                if (minDistance == 0)
+                    return 99999999;
+                return (meleeDame+gunDame) * 100 / minDistance;
             }
 
             void getWeapon(Node weapon, int type) {
@@ -358,25 +382,16 @@ public class Main {
                 if (weapon == null)
                     return 0;
                 int pointWeapon = 0;
-                int meleeDame = 0;
-                int gunDame = 0;
-
-                if (haveMelee) {
-                    meleeDame = melee.getDamage();
-                }
-                if (haveGun) {
-                    gunDame = gun.getDamage();
-                }
                 if (weapon.getType() == ElementType.THROWABLE) {
                     if (!haveThrow) {
                         pointWeapon = weapon.getDamage();
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon = weapon.getDamage() - meleeDame;
+                    pointWeapon = (weapon.getDamage() - meleeDame)*2;
                 }
                 if (weapon.getType() == ElementType.GUN) {
-                    pointWeapon = weapon.getDamage() - gunDame;
+                    pointWeapon = (weapon.getDamage() - gunDame)*2;
                 }
                 return pointWeapon * 100 / Math.max(distance(weapon), 1);
             }
@@ -391,11 +406,7 @@ public class Main {
                 if (me.getDamageReduction() == 20 || me.getDamageReduction() == 0) {
                     pointChest += 5 * 3 * 4 * 5 + 10 * 3 * 4 * 3;
                 }
-                pointChest += (100 - me.getHp()) * 200;
-                int meleeDame = 0;
-                if (haveMelee) {
-                    meleeDame = melee.getDamage();
-                }
+                pointChest += getPointHealth(20);
                 if (meleeDame == 45) {
                     pointChest += 55 * 2 * 4 * 4;
                 }
@@ -542,6 +553,14 @@ public class Main {
                 if ((gunCooldown <= 1 && haveGun) || (meleeCooldown <= 1 && haveMelee)) {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - myPos.x) == 1 && Math.abs(p.y - myPos.y) == 1) {
+                            if (myPos.x + 1 == p.x && g.get(myPos.x + 1).get(myPos.y) != -1) {
+                                move("u");
+                                return;
+                            }
+                            if (myPos.x - 1 == p.x && g.get(myPos.x - 1).get(myPos.y) != -1) {
+                                move("d");
+                                return;
+                            }
                             move(PathUtils.getShortestPath(gameMap, restrictedNodesWithoutPlayers, myPos, p, false));
                             return;
                         }
