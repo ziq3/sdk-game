@@ -546,7 +546,7 @@ public class Main {
                             } else {
                                 shoot("u");
                             }
-                            gunCooldown=gun.getCooldown();
+                            gunCooldown=gun.getCooldown()+1;
                             return;
                         }
                         if (Math.abs(p.y - myPos.y) == 0 && Math.abs(p.x - myPos.x) <= gun.getRange()) {
@@ -555,7 +555,7 @@ public class Main {
                             } else {
                                 shoot("r");
                             }
-                            gunCooldown=gun.getCooldown();
+                            gunCooldown=gun.getCooldown()+1;
                             return;
                         }
                     }
