@@ -577,13 +577,13 @@ public class Main {
                 if ((haveGun && gunCooldown <= 1) || (haveMelee && meleeCooldown <= 1)) {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - myPos.x) == 1 && Math.abs(p.y - myPos.y) == 1) {
-                            if (myPos.x + 1 == p.x
-                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x + 1, myPos.y))) {
+                            if (myPos.y + 1 == p.y
+                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x, myPos.y+1))) {
                                 move("u");
                                 return;
                             }
-                            if (myPos.x - 1 == p.x
-                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x - 1, myPos.y))) {
+                            if (myPos.y - 1 == p.y
+                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x, myPos.y-1))) {
                                 move("d");
                                 return;
                             }
