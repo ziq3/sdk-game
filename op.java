@@ -533,7 +533,7 @@ public class Main {
                     for (Node p : otherPlayers) {
                         if (distance2(myPos, p) == 1) {
                             mAttack(p);
-                            meleeCooldown=melee.getCooldown();
+                            meleeCooldown=melee.getCooldown()+1;
                             return;
                         }
                     }
