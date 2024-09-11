@@ -372,7 +372,7 @@ public class Main {
                     pointChest += 5 * 3 * 4 * 5 + 10 * 3 * 4 * 3;
                 }
                 pointChest += getPointHealth(20);
-                if (meleeDame == 45) {
+                if (meleeDame <= 45) {
                     pointChest += 55 * 2 * 4 * 4;
                 }
                 if (meleeDame == 0) {
@@ -420,12 +420,14 @@ public class Main {
             void calculateOptimizedMove() {
                 List<Node> nextToChest = new ArrayList<>();
                 for (Obstacle p : gameMap.getListChests()) {
+                    if(!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))continue;
                     for (int i = 0; i < 4; ++i) {
                         nextToChest.add(add(new Node(p.getX(), p.getY()), DIRECTIONS.get(i)));
                     }
                 }
                 List<Node> nextToPlayer = new ArrayList<>();
                 for (Node p : otherPlayers) {
+                    if(!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))continue;
                     for (int i = 0; i < 4; ++i) {
                         nextToPlayer.add(add(p, DIRECTIONS2.get(i)));
                     }
