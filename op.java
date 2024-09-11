@@ -123,6 +123,8 @@ public class Main {
                 me = gameMap.getCurrentPlayer();
                 myInventory = hero.getInventory();
                 myPos = gameMap.getCurrentPlayer();
+                gunCooldown -= 1;
+                meleeCooldown -= 1;
                 gun = myInventory.getGun();
                 haveGun = gun != null;
                 melee = myInventory.getMelee();
@@ -595,8 +597,6 @@ public class Main {
                     }
                 }
                 calculateOptimizedMove();
-                gunCooldown -= 1;
-                meleeCooldown -= 1;
             }
         };
 
