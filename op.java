@@ -418,7 +418,13 @@ public class Main {
                 }
                 getItem(armor);
             }
-
+            boolean contains(List<Node> list, Node node) {
+                for (Node p : list) {
+                    if (equal(p, node))
+                        return true;
+                }
+                return false;
+            }
             void calculateOptimizedMove() {
                 List<Node> nextToChest = new ArrayList<>();
                 for (Obstacle p : gameMap.getListChests()) {
@@ -582,12 +588,12 @@ public class Main {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - myPos.x) == 1 && Math.abs(p.y - myPos.y) == 1) {
                             if (myPos.y + 1 == p.y
-                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x, myPos.y+1))) {
+                                    && !contains(restrictedNodesWithoutPlayers,new Node(myPos.x, myPos.y+1))) {
                                 move("u");
                                 return;
                             }
                             if (myPos.y - 1 == p.y
-                                    && !restrictedNodesWithoutPlayers.contains(new Node(myPos.x, myPos.y-1))) {
+                                    && !contains(restrictedNodesWithoutPlayers,new Node(myPos.x, myPos.y-1))) {
                                 move("d");
                                 return;
                             }
