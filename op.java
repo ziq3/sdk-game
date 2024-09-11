@@ -77,7 +77,7 @@ public class Main {
             }
 
             void attack(String x) {
-                meleeCooldown=melee.getCooldown()+1;
+                meleeCooldown = melee.getCooldown() + 1;
                 try {
                     hero.attack(x);
                 } catch (Exception ignored) {
@@ -86,7 +86,7 @@ public class Main {
             }
 
             void shoot(String x) {
-                gunCooldown=gun.getCooldown()+1;
+                gunCooldown = gun.getCooldown() + 1;
                 try {
                     hero.shoot(x);
                 } catch (Exception ignored) {
@@ -420,6 +420,7 @@ public class Main {
                 }
                 getItem(armor);
             }
+
             boolean contains(List<Node> list, Node node) {
                 for (Node p : list) {
                     if (equal(p, node))
@@ -427,17 +428,20 @@ public class Main {
                 }
                 return false;
             }
+
             void calculateOptimizedMove() {
                 List<Node> nextToChest = new ArrayList<>();
                 for (Obstacle p : gameMap.getListChests()) {
-                    if(!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))continue;
+                    if (!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))
+                        continue;
                     for (int i = 0; i < 4; ++i) {
                         nextToChest.add(add(new Node(p.getX(), p.getY()), DIRECTIONS.get(i)));
                     }
                 }
                 List<Node> nextToPlayer = new ArrayList<>();
                 for (Node p : otherPlayers) {
-                    if(!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))continue;
+                    if (!PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize()))
+                        continue;
                     for (int i = 0; i < 4; ++i) {
                         nextToPlayer.add(add(p, DIRECTIONS2.get(i)));
                     }
@@ -467,26 +471,6 @@ public class Main {
                 target.add(nearestThrow);
                 for (int i = 0; i < 7; ++i) {
                     System.out.println(pointItems.get(i));
-                }
-                boolean danger = false;
-                for (Node p : restrictedNodes) {
-                    if (equal(p, myPos)) {
-                        danger = true;
-                        break;
-                    }
-                }
-                Node nearestPlayerReal = nearestNode(otherPlayers);
-                if (!danger) {
-                    List<HealingItem> myItems = myInventory.getListHealingItem();
-                    for (HealingItem item : myItems) {
-                        int diffX = Math.abs(nearestPlayerReal.getX() - myPos.getX());
-                        int diffY = Math.abs(nearestPlayerReal.getY() - myPos.getY());
-                        int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
-                        if (me.getHp() < 100 && timeToReach >= item.getUsageTime()) {
-                            useItem(item.getId());
-                            return;
-                        }
-                    }
                 }
                 int maxPoint = Collections.max(pointItems);
                 for (int i = 0; i < 7; ++i) {
@@ -569,6 +553,27 @@ public class Main {
                         }
                     }
                 }
+                boolean danger = false;
+                for (Node p : restrictedNodes) {
+                    if (equal(p, myPos)) {
+                        danger = true;
+                        break;
+                    }
+                }
+                Node nearestPlayerReal = nearestNode(otherPlayers);
+                if (!danger) {
+                    List<HealingItem> myItems = myInventory.getListHealingItem();
+                    for (HealingItem item : myItems) {
+                        int diffX = Math.abs(nearestPlayerReal.getX() - myPos.getX());
+                        int diffY = Math.abs(nearestPlayerReal.getY() - myPos.getY());
+                        int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
+                        if ((me.getHp() + item.getHealingHP() <= 100 || me.getHp() <= 55)
+                                && timeToReach >= item.getUsageTime()) {
+                            useItem(item.getId());
+                            return;
+                        }
+                    }
+                }
                 if (haveThrow) {
                     List<Node> targetThrow = new ArrayList<>();
                     for (int i = 0; i < 4; ++i) {
@@ -587,12 +592,12 @@ public class Main {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - myPos.x) == 1 && Math.abs(p.y - myPos.y) == 1) {
                             if (myPos.y + 1 == p.y
-                                    && !contains(restrictedNodesWithoutPlayers,new Node(myPos.x, myPos.y+1))) {
+                                    && !contains(restrictedNodesWithoutPlayers, new Node(myPos.x, myPos.y + 1))) {
                                 move("u");
                                 return;
                             }
                             if (myPos.y - 1 == p.y
-                                    && !contains(restrictedNodesWithoutPlayers,new Node(myPos.x, myPos.y-1))) {
+                                    && !contains(restrictedNodesWithoutPlayers, new Node(myPos.x, myPos.y - 1))) {
                                 move("d");
                                 return;
                             }
