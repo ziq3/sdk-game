@@ -358,10 +358,10 @@ public class Main {
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon = (weapon.getDamage() - meleeDame) * 2;
+                    pointWeapon = (weapon.getDamage() - meleeDame) * 3;
                 }
                 if (weapon.getType() == ElementType.GUN) {
-                    pointWeapon = (weapon.getDamage() - gunDame) * 2;
+                    pointWeapon = (weapon.getDamage() - gunDame) * 3;
                 }
                 return pointWeapon * 100 / (distance(weapon) + 1);
             }
@@ -378,15 +378,15 @@ public class Main {
                 }
                 pointChest += getPointHealth(20);
                 if (meleeDame <= 45) {
-                    pointChest += 55 * 2 * 4 * 4;
+                    pointChest += (55 - meleeDame) * 3 * 4 * 4;
                 }
                 if (meleeDame == 0) {
-                    pointChest += 45 * 2 * 4 * 16;
+                    pointChest += 45 * 3 * 4 * 16;
                 }
                 if (!haveThrow) {
                     pointChest += 25 * 1 * 4 * 40;
                 }
-                return pointChest / (distance(chest) + 3);
+                return pointChest / (distance(chest) + 4);
             }
 
             void getWeapon(Node weapon, int type) {
@@ -514,11 +514,10 @@ public class Main {
                 gameMap.updateOnUpdateMap(args[0]);
                 init();
                 bfs();
-                if(me.getHp()==0)
-                {
-                    haveGun=false;
-                    haveMelee=false;
-                    haveThrow=false;
+                if (me.getHp() == 0) {
+                    haveGun = false;
+                    haveMelee = false;
+                    haveThrow = false;
                 }
                 System.out.println("Vi tri hien tai " + myPos.getX() + " " + myPos.getY());
                 System.out.println("Co sung " + haveGun);
