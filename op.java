@@ -49,11 +49,11 @@ public class Main {
             int meleeCooldown = 0;
             int gunCooldown = 0;
             Weapon gun;
-            boolean haveGun = false;
+            boolean haveGun;
             Weapon melee;
-            boolean haveMelee = false;
+            boolean haveMelee;
             Weapon throwWeapon;
-            boolean haveThrow = false;
+            boolean haveThrow;
             int meleeDame;
             int gunDame;
 
@@ -86,9 +86,6 @@ public class Main {
             }
 
             void shoot(String x) {
-                if (me.getBulletNum() == 1) {
-                    haveGun = false;
-                }
                 gunCooldown = gun.getCooldown() + 1;
                 try {
                     hero.shoot(x);
@@ -111,7 +108,6 @@ public class Main {
             }
 
             void throwAttack(String x) {
-                haveThrow = false;
                 try {
                     hero.throwItem(x);
                 } catch (Exception ignored) {
@@ -132,8 +128,11 @@ public class Main {
                 gunCooldown -= 1;
                 meleeCooldown -= 1;
                 gun = myInventory.getGun();
+                haveGun = gun != null;
                 melee = myInventory.getMelee();
+                haveMelee = !melee.getId().equals("HAND");
                 throwWeapon = myInventory.getThrowable();
+                haveThrow = throwWeapon != null;
                 meleeDame = 0;
                 gunDame = 0;
                 if (haveMelee) {
@@ -358,10 +357,10 @@ public class Main {
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon = (weapon.getDamage() - meleeDame) * 3;
+                    pointWeapon = (weapon.getDamage() - meleeDame) * 2;
                 }
                 if (weapon.getType() == ElementType.GUN) {
-                    pointWeapon = (weapon.getDamage() - gunDame) * 3;
+                    pointWeapon = (weapon.getDamage() - gunDame) * 2;
                 }
                 return pointWeapon * 100 / (distance(weapon) + 1);
             }
@@ -378,15 +377,15 @@ public class Main {
                 }
                 pointChest += getPointHealth(20);
                 if (meleeDame <= 45) {
-                    pointChest += (55 - meleeDame) * 3 * 4 * 4;
+                    pointChest += 55 * 2 * 4 * 4;
                 }
                 if (meleeDame == 0) {
-                    pointChest += 45 * 3 * 4 * 16;
+                    pointChest += 45 * 2 * 4 * 16;
                 }
                 if (!haveThrow) {
                     pointChest += 25 * 1 * 4 * 40;
                 }
-                return pointChest / (distance(chest) + 4);
+                return pointChest / (distance(chest) + 3);
             }
 
             void getWeapon(Node weapon, int type) {
@@ -395,24 +394,15 @@ public class Main {
                         if (haveMelee) {
                             System.out.println("bo melee");
                             revokeItem(melee.getId());
-                            haveMelee = false;
                             return;
-                        } else {
-                            haveMelee = true;
                         }
                     }
                     if (type == 5) {
                         if (haveGun) {
                             System.out.println("bo gun");
                             revokeItem(gun.getId());
-                            haveGun = false;
                             return;
-                        } else {
-                            haveGun = true;
                         }
-                    }
-                    if (type == 6) {
-                        haveThrow = true;
                     }
                 }
                 getItem(weapon);
@@ -514,18 +504,13 @@ public class Main {
                 gameMap.updateOnUpdateMap(args[0]);
                 init();
                 bfs();
-                if (me.getHp() == 0) {
-                    haveGun = false;
-                    haveMelee = false;
-                    haveThrow = false;
-                }
+
                 System.out.println("Vi tri hien tai " + myPos.getX() + " " + myPos.getY());
                 System.out.println("Co sung " + haveGun);
                 System.out.println("Co dao " + haveMelee);
                 System.out.println("Co nem " + haveThrow);
                 System.out.println("gunCooldown " + gunCooldown);
                 System.out.println("meleeCooldown " + meleeCooldown);
-                System.out.println("bullet " + me.getBulletNum());
                 if (!PathUtils.checkInsideSafeArea(myPos, gameMap.getDarkAreaSize(), gameMap.getMapSize())) {
                     Node nearest = new Node(-1, -1);
                     for (int i = 0; i < gameMap.getMapSize(); ++i) {
