@@ -77,6 +77,7 @@ public class Main {
             }
 
             void attack(String x) {
+                meleeCooldown=melee.getCooldown()+1;
                 try {
                     hero.attack(x);
                 } catch (Exception ignored) {
@@ -85,6 +86,7 @@ public class Main {
             }
 
             void shoot(String x) {
+                gunCooldown=gun.getCooldown()+1;
                 try {
                     hero.shoot(x);
                 } catch (Exception ignored) {
@@ -543,7 +545,6 @@ public class Main {
                     for (Node p : otherPlayers) {
                         if (distance2(myPos, p) == 1) {
                             mAttack(p);
-                            meleeCooldown=melee.getCooldown()+1;
                             return;
                         }
                     }
@@ -556,7 +557,6 @@ public class Main {
                             } else {
                                 shoot("u");
                             }
-                            gunCooldown=gun.getCooldown()+1;
                             return;
                         }
                         if (Math.abs(p.y - myPos.y) == 0 && Math.abs(p.x - myPos.x) <= gun.getRange()) {
@@ -565,7 +565,6 @@ public class Main {
                             } else {
                                 shoot("r");
                             }
-                            gunCooldown=gun.getCooldown()+1;
                             return;
                         }
                     }
