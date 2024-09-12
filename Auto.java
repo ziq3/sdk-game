@@ -2,15 +2,12 @@ import io.socket.emitter.Emitter;
 import jsclub.codefest2024.sdk.*;
 import jsclub.codefest2024.sdk.algorithm.PathUtils;
 import jsclub.codefest2024.sdk.base.Node;
-import jsclub.codefest2024.sdk.model.GameMap;
+import jsclub.codefest2024.sdk.model.*;
 import jsclub.codefest2024.sdk.model.enemies.Enemy;
-import jsclub.codefest2024.sdk.model.equipments.Armor;
-import jsclub.codefest2024.sdk.model.equipments.HealingItem;
+import jsclub.codefest2024.sdk.model.equipments.*;
 import jsclub.codefest2024.sdk.model.obstacles.Obstacle;
 import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
-import jsclub.codefest2024.sdk.model.Inventory;
-import jsclub.codefest2024.sdk.model.ElementType;
 import java.io.IOException;
 import java.util.*;
 
@@ -52,7 +49,6 @@ public class Main {
             boolean haveGun = false;
             Weapon melee;
             boolean haveMelee = false;
-            Weapon throwWeapon;
             boolean haveThrow = false;
             int meleeDame;
             int gunDame;
@@ -133,9 +129,13 @@ public class Main {
                 meleeCooldown -= 1;
                 gun = myInventory.getGun();
                 melee = myInventory.getMelee();
-                throwWeapon = myInventory.getThrowable();
                 meleeDame = 0;
                 gunDame = 0;
+                if (me.getHp() == 0) {
+                    haveGun = false;
+                    haveMelee = false;
+                    haveThrow = false;
+                }
                 if (haveMelee) {
                     meleeDame = melee.getDamage();
                 }
@@ -186,8 +186,6 @@ public class Main {
             }
 
             void bfs() {
-                int[] dx = { 0, 0, 1, -1 };
-                int[] dy = { 1, -1, 0, 0 };
                 int mapSize = gameMap.getMapSize();
                 int darkAreaSize = gameMap.getDarkAreaSize();
 
@@ -217,23 +215,21 @@ public class Main {
                 while (!queue.isEmpty()) {
                     Node u = queue.poll();
                     for (int dir = 0; dir < 4; ++dir) {
-                        int x = u.x + dx[dir];
-                        int y = u.y + dy[dir];
-                        if (x < 0 || x >= mapSize || y < 0 || y >= mapSize)
+                        Node v = add(u, DIRECTIONS.get(dir));
+                        if (v.x < 0 || v.x >= mapSize || v.y < 0 || v.y >= mapSize)
                             continue;
                         if (PathUtils.checkInsideSafeArea(myPos, darkAreaSize, mapSize)
-                                && !PathUtils.checkInsideSafeArea(new Node(x, y), darkAreaSize, mapSize)) {
+                                && !PathUtils.checkInsideSafeArea(v, darkAreaSize, mapSize)) {
                             continue;
                         }
-                        if (isRestrictedNodes.get(x).get(y)) {
+                        if (isRestrictedNodes.get(v.x).get(v.y)) {
                             continue;
                         }
                         int cost = g.get(u.x).get(u.y) + 1;
-                        // System.out.println(cost);
-                        if (g.get(x).get(y) > cost) {
-                            g.get(x).set(y, cost);
-                            trace.get(x).set(y, dir);
-                            queue.add(new Node(x, y));
+                        if (g.get(v.x).get(v.y) > cost) {
+                            g.get(v.x).set(v.y, cost);
+                            trace.get(v.x).set(v.y, dir);
+                            queue.add(v);
                         }
                     }
                 }
@@ -345,7 +341,7 @@ public class Main {
             int getPointPlayer(Node nextToPlayer) {
                 if (distance(nextToPlayer) == 0)
                     return 0;
-                return (meleeDame + gunDame) * 180 / (distance(nextToPlayer) + 10);
+                return (meleeDame + gunDame - (100 - me.getHp())) * 180 / (distance(nextToPlayer) + 10);
             }
 
             int getPointWeapon(Weapon weapon) {
@@ -514,11 +510,6 @@ public class Main {
                 gameMap.updateOnUpdateMap(args[0]);
                 init();
                 bfs();
-                if (me.getHp() == 0) {
-                    haveGun = false;
-                    haveMelee = false;
-                    haveThrow = false;
-                }
                 System.out.println("Vi tri hien tai " + myPos.getX() + " " + myPos.getY());
                 System.out.println("Co sung " + haveGun);
                 System.out.println("Co dao " + haveMelee);
