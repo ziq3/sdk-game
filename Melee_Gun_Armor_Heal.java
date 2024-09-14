@@ -18,14 +18,14 @@ public class Main {
 
 
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
-    private static final String GAME_ID = "173873";
-    private static final String PLAYER_NAME = "ABC";
-
+    private static final String GAME_ID = "110899";
+    private static final String PLAYER_NAME = "BurnedBing";
+    private static final String PLAYER_KEY = "9576b1db-2ac8-4534-80da-21feec8bba8d";
     private static final List<Node> DIRECTION = Arrays.asList(new Node(0, 1), new Node(0, -1), new Node(1, 0),
             new Node(-1, 0));
 
-    private static final int CHESTGUN=20;
-    private static final int CHESTPLAYER=20;
+    private static final int CHESTGUN=10;
+    private static final int CHESTPLAYER=15;
     private static final int BETTERGUNPLAYER=20;
     private static final int ENEMY=2;
     private static final int MAX=123456789;
@@ -116,13 +116,18 @@ public class Main {
                 }
             }
         }
-        else if(Me.getHp()<=90) {
-            for (HealingItem healingItem : ListHealItem) {
-                if (healingItem.getHealingHP() > maxHP && healingItem.getHealingHP() <= 20) {
-                    bestHeal = healingItem;
-                    maxHP = bestHeal.getHealingHP();
+        else if(Me.getHp()<=90)
+        {
+            for(HealingItem healingItem : ListHealItem){
+                if(healingItem.getHealingHP()>maxHP && healingItem.getHealingHP()<=20){
+                    bestHeal=healingItem;
+                    maxHP=bestHeal.getHealingHP();
                 }
             }
+        }
+        if(bestHeal!=null) {
+                countToReHeal = bestHeal.getUsageTime()+1;
+
         }
         return bestHeal;
 
@@ -153,7 +158,7 @@ public class Main {
         for (Weapon item : meleeList) if(checkInsideSafeArea(item, gameMap.getDarkAreaSize(), gameMap.getMapSize())
                 && !BlocksNodes.contains(currentNode)) {
             int distanceToItem = lengthPath(currentNode, item, BlocksNodes, gameMap);
-            if (distanceToItem <= 5 && distanceToItem < minDistance) {
+            if (distanceToItem <= 10 && distanceToItem < minDistance) {
                 minDistance = distanceToItem;
                 nearestMelee = item;
             }
@@ -181,7 +186,7 @@ public class Main {
         for (Armor item : armorList) if(checkInsideSafeArea(item, gameMap.getDarkAreaSize(), gameMap.getMapSize())
                 && !BlocksNodes.contains(currentNode)){
             int distanceToItem = lengthPath(currentNode, item, BlocksNodes, gameMap);
-            if (distanceToItem <= 5 && distanceToItem < minDistance) {
+            if (distanceToItem <= 3 && distanceToItem < minDistance) {
                 minDistance = distanceToItem;
                 nearestArmor = item;
             }
@@ -201,150 +206,10 @@ public class Main {
         }
     } // hướng để attack
 
-    private static boolean checkNotBeBlock(Node currentNode, List<Node> BlocksNodes) {
-        for(Node N : BlocksNodes){
-            if(N.getX()==currentNode.getX() && N.getY()==currentNode.getY()){
-                return false;
-            }
-        }
-        return true;
-    }// check đồ ko bị rời vào block
-
-    //main lỏ
-
-    public static void main(String[] args) throws IOException {
-        Hero hero = new Hero(GAME_ID, PLAYER_NAME);
-
-        Emitter.Listener onMapUpdate = new Emitter.Listener() {
-
-            @Override
-            public void call(Object... args) {
-                try {
-                    System.out.println("Start a try");
-                    GameMap gameMap = hero.getGameMap(); // map
-                    gameMap.updateOnUpdateMap(args[0]);
-
-                    Player Me = gameMap.getCurrentPlayer(); // Me
-
-
-// =======================// =======================// =======================// =======================
-//                    These use when you have to restart game to revoke item
-//                    hero.revokeItem("WATER_GUN");
-//                    hero.revokeItem("LEGO_GUN");
-//                    hero.revokeItem("RUBBER_GUN");
-//                    hero.revokeItem("BADMINTON");
-//                    hero.revokeItem("BROOM");
-//                    hero.revokeItem("SANDAL");
-//                    hero.revokeItem("LIGHT_SABER");
-//                    hero.revokeItem("SNACK");
-//                    hero.revokeItem("INSECTICIDE");
-//                    hero.revokeItem("DRINK");
-//                    hero.revokeItem("BANDAGES");
-//                    hero.revokeItem("LUNCH_BOX");
-//                    hero.revokeItem("VEST");
-//                    hero.revokeItem("POT");
-//                    hero.revokeItem("HELMET");
-// =======================// =======================// =======================// =======================
-
-
-                    if (countToReHeal > 0) countToReHeal--;
-                    if (countToAttack > 0) countToAttack--;
-                    if (countToFire > 0) countToFire--;
-
-                    Node currentNode = new Node(Me.getX(), Me.getY());
-                    if (!Me.getIsAlive()) {
-                        System.out.println("You are dead");
-                    }
-                    else {
-                        List<Player> OtherPlayerList = gameMap.getOtherPlayerInfo(); // Other Players List
-                        List<Node> OtherPlayerNodes = new ArrayList<>(); // OtherPlayerNodes
-
-                        for (Player p : OtherPlayerList) {
-                            if (p.getIsAlive() && checkInsideSafeArea(new Node(p.getX(), p.getY()), gameMap.getDarkAreaSize(), gameMap.getMapSize())) {
-                                OtherPlayerNodes.add(new Node(p.getX(), p.getY()));
-                            }
-                        } //  create OtherPlayerNodes by alive players
-
-                        List<Obstacle> Blocks = gameMap.getListIndestructibleObstacles(); // Blocks(Wall+Trap)
-                        Blocks.addAll(gameMap.getListTraps());
-
-                        List<Enemy> ListEnemies = gameMap.getListEnemies(); // List of Enemies
-
-                        List<Node> BlocksNodes = new ArrayList<>(); // BlocksNodes
-
-                        for (Obstacle O : Blocks) {
-
-                            BlocksNodes.add(new Node(O.getX(), O.getY()));
-                        } // creat Blocknodes (wall + trap + other players)
-
-                        BlocksNodes.addAll(OtherPlayerNodes);
-
-
-                            boolean is_enemy_coming = false;
-                            for (Enemy E : ListEnemies) {
-                                Node enemy = new Node(E.getX(), E.getY());
-                                for (int i = -ENEMY; i <= ENEMY; ++i) {
-                                    for (int j = -ENEMY; j <= ENEMY; ++j)
-                                        if (Math.abs(i) + Math.abs(j) <= ENEMY) {
-                                            if (currentNode.x - i == enemy.x && currentNode.y - j == enemy.y) {
-                                                is_enemy_coming = true;
-                                            }
-                                            BlocksNodes.add(add(new Node(i, j), enemy));
-                                        }
-                                }
-                            } // add block around enemies and check if they are coming
-
-
-                            if (is_enemy_coming) {
-                                List<Obstacle> CHESTLIST = gameMap.getListChests();
-                                for (Obstacle O : CHESTLIST) {
-                                    BlocksNodes.add(new Node(O.getX(), O.getY()));
-                                }// add all chest
-
-                                boolean is_move = false;
-                                for (Node C : OtherPlayerNodes)
-                                    if (distance(currentNode, C) > 1) {
-                                        String Path = PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, C, false);
-                                        if (Path != null) {
-                                            System.out.println("ENEMY IS COMING!!!!");
-                                            hero.move(Path);
-                                            is_move = true;
-                                            break;
-                                        }
-                                    }// if enemy is coming, move to something else, player is a good choice
-                                if (!is_move) {
-                                    HealingItem curHeal = usingHealingItem(hero, gameMap);
-                                    if (countToReHeal == 0 && curHeal != null) {
-                                        hero.useItem(curHeal.getId());
-                                        countToReHeal=curHeal.getUsageTime()+1;
-                                        System.out.println("Can't move, heal!!!");
-                                    } else {
-                                        is_enemy_coming = false;
-                                        System.out.println("Can't move, can't heal, do anything!!!");
-                                    }
-                                }
-                            }
-                            //gameMap.updateOnUpdateMap(args[0]);
-                            System.out.println("Return: " + try_all(currentNode, hero, OtherPlayerNodes, BlocksNodes, gameMap, is_enemy_coming));
-                        }
-
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                System.out.println("===================");
-            }
-        };
-
-        hero.setOnMapUpdate(onMapUpdate);
-        hero.start(SERVER_URL);
-    }
-
-    //  tactic lỏ
-
+    // main tactic
     private static int try_all( Node currentNode, Hero hero,List<Node> OtherPlayerNodes, List<Node> BlocksNodes,
-                                GameMap gameMap, boolean is_enemy_coming) throws IOException {
-        if(is_enemy_coming) return 0;
+                                GameMap gameMap ) throws IOException {
+
         Node nearestPlayerNode =null;
         if(!OtherPlayerNodes.isEmpty()) nearestPlayerNode=OtherPlayerNodes.getFirst();
         int minDisToPlayer = MAX;
@@ -356,41 +221,38 @@ public class Main {
         }
 
         for (Node P : OtherPlayerNodes) {
-            int disToPlayer = distance(P, currentNode);
+            int disToPlayer = lengthPath(P, currentNode,BlocksNodes,gameMap);
             if (disToPlayer < minDisToPlayer) {
                 minDisToPlayer = disToPlayer;
                 nearestPlayerNode = P;
             }
         } // find nearest player
-
-        if( (nearestPlayerNode==null||minDisToPlayer>8) && countToReHeal==0) {
+        if( (nearestPlayerNode!=null||minDisToPlayer>8) && countToReHeal==0) {
             HealingItem curHeal= usingHealingItem(hero,gameMap);
             if(curHeal!=null) {
                 hero.useItem(curHeal.getId());
-                countToReHeal=curHeal.getUsageTime()+1;
                 System.out.println("Healing!!!!!");
                 return 1;
             }
         }
         Player Me=gameMap.getCurrentPlayer();
         List<Weapon> AllListGun=gameMap.getAllGun();
+        List<Weapon> ListGun= new ArrayList<>();
         List<Obstacle> CHESTLIST=gameMap.getListChests();
         List<Node> CHESTLISTNODE=new ArrayList<>();
         for(Obstacle P:CHESTLIST){
             CHESTLISTNODE.add(new Node(P.getX(),P.getY()));
         }
-        List<Weapon> ListGun = new ArrayList<>();
         for(Weapon weapon:AllListGun) if(checkInsideSafeArea(weapon, gameMap.getDarkAreaSize(), gameMap.getMapSize())){
             ListGun.add(weapon);
         }
         Weapon curGun = hero.getInventory().getGun(); // Gun
-        boolean pickedUpGun = (hero.getInventory().getGun() != null);
+        boolean pickedUpGun = (curGun != null);
         if(!pickedUpGun) System.out.println("Have gun?: " + pickedUpGun);
         else System.out.println("Currnet gun?: "+curGun.getId()+", Dame: "+curGun.getDamage());
 
         Weapon curMelee = hero.getInventory().getMelee(); // Melee
         boolean pickedBestMelee = curMelee.getId().equals("LIGHT_SABER");
-        boolean pickedUpMelee= !hero.getInventory().getMelee().getId().equals("HAND");
         System.out.println("Current melee?: " + curMelee.getId()+", Dame: "+curMelee.getDamage());
 
         int  numberHealItem=hero.getInventory().getListHealingItem().size();
@@ -398,7 +260,7 @@ public class Main {
         System.out.println("Number of heal items?: " + numberHealItem);
 
         List<Armor> MyarmorList=hero.getInventory().getListArmor();
-        boolean isFullArmor,haveAnyArmor,haveVest=false,haveHelmet=false;
+        boolean isFullArmor,haveVest=false,haveHelmet=false;
         for(Armor A: MyarmorList){
             if(A.getId().equals("VEST")){
                 haveVest=true;
@@ -407,11 +269,10 @@ public class Main {
                 haveHelmet=true;
             }
         }
-        haveAnyArmor=(haveVest || haveHelmet);
         isFullArmor=(haveVest && haveHelmet);
         System.out.println("Have Vest?: " + haveVest);
         System.out.println("Have Helmet?: " + haveHelmet);
-        System.out.println("Have full armor?: " + haveAnyArmor);
+        System.out.println("Have full armor?: " + isFullArmor);
 
         List<Weapon> meleeList = gameMap.getAllMelee();
 
@@ -435,7 +296,19 @@ public class Main {
             return 1;
         }  //move to melee item and pick up if near
 
+        HealingItem nearestHealingItem = findNearestHealingItem(currentNode,BlocksNodes,gameMap,gameMap.getListHealingItems());
+        if(nearestHealingItem!=null&&!isFullHeal) {
+            if (currentNode.getX() == nearestHealingItem.getX() && currentNode.getY() == nearestHealingItem.getY()) {
 
+                System.out.println("Picked up HealingItem");
+                hero.pickupItem();
+                return 1;
+            }
+            System.out.println("Move to healing item: " + nearestHealingItem);
+            BlocksNodes.addAll(CHESTLISTNODE);
+            hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestHealingItem, true));
+            return 1;
+        }  //move to healing item and pick up if near
 
         Armor nearestArmor = findNearestArmor(currentNode,BlocksNodes,gameMap,gameMap.getListArmors());
         if(nearestArmor!=null && !isFullArmor ) {
@@ -457,17 +330,17 @@ public class Main {
                 return 1;
             }
         }  //move to armor item and pick up if near
-//
+
+        boolean isFullSet=(isFullArmor&&isFullHeal&&pickedBestMelee);
+
 //        if(pickedUpGun && (haveHelmet||haveVest) ){
-//            BlocksNodes.addAll(CHESTLISTNODE);
 //            hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, new Node(1,1), true));
 //            return 0;
-//        } cái này để tự tử trong trường hợp lỗi gì đó :?
+//        }
 
         if(nearestPlayerNode!=null&&countToAttack==0&& minDisToPlayer<=3 && distance(currentNode,nearestPlayerNode)<=3){
-            if(
-                    (!curMelee.getId().equals("HAND")) ||
-                            (pickedUpGun && distance(currentNode,nearestPlayerNode)==1)
+            if( (Me.getHp()>55 && pickedBestMelee) ||
+                    (Me.getHp()>65 && !curMelee.getId().equals("HAND"))
             ){
                 if(isAround(currentNode,nearestPlayerNode)){
                     System.out.println("Attack player");
@@ -483,27 +356,14 @@ public class Main {
                 }
                 return 1;
             }
-        }// chém khi có vũ khí và gần địch
-        boolean isNearlyFullSet= ((haveAnyArmor)&&(pickedUpGun||pickedUpMelee));
-        HealingItem nearestHealingItem = findNearestHealingItem(currentNode,BlocksNodes,gameMap,gameMap.getListHealingItems());
-        if(nearestHealingItem!=null&&!isFullHeal) {
-            if (currentNode.getX() == nearestHealingItem.getX() && currentNode.getY() == nearestHealingItem.getY()) {
+        }// chém khi có vũ khí xịn và gần địch
 
-                System.out.println("Picked up HealingItem");
-                hero.pickupItem();
-                return 1;
-            }
-            System.out.println("Move to healing item: " + nearestHealingItem);
-            BlocksNodes.addAll(CHESTLISTNODE);
-            hero.move(PathUtils.getShortestPath(gameMap, BlocksNodes, currentNode, nearestHealingItem, true));
-            return 1;
-        }  //move to healing item and pick up if near
 
         if (!pickedUpGun) {
 
             Weapon nearestGun = null;
 
-            for (Weapon weapon : gunList) if(checkNotBeBlock(weapon,BlocksNodes))
+            for (Weapon weapon : gunList)
                 if(PathUtils.getShortestPath(gameMap,BlocksNodes,currentNode,weapon,true)!=null){
                     if(nearestGun==null) {
                         nearestGun=weapon;
@@ -540,8 +400,9 @@ public class Main {
             int distToGun;
             if(nearestGun==null) distToGun=MAX;
             else distToGun= lengthPath(currentNode, nearestGun,BlocksNodes,gameMap);  // Khoảng cách đến súng
+
             // Quyết định dựa trên khoảng cách đến rương và súng
-            if (nearestChest!=null && ( (Me.getHp()<=60) ||( !isNearlyFullSet &&(distToChest + CHESTGUN <= distToGun))) ) {
+            if (nearestChest!=null && ( (Me.getHp()<=60) ||(!isFullSet&&(distToChest + CHESTGUN <= distToGun))) ) {
                 if (distance(currentNode,nearestChest) == 1)
                 {
                     System.out.println("Breaking chest...");
@@ -583,7 +444,10 @@ public class Main {
                 System.out.println("[Path to gun] "+Path);
                 hero.move(Path);  // Di chuyển đến gun
             }//move to gun
-
+            else{
+                System.out.println("?????");
+                return 0;
+            }
             return 1;
         } // no gun, find near healing item or chest or gun (not find player)
         else {
@@ -613,6 +477,7 @@ public class Main {
 
             if (fire_or_move) {
                 System.out.println("Fired");
+                if(!curMelee.getId().equals("HAND")) countToFire=curGun.getCooldown();// nếu có melee thì set countToFire để lại gần địch
                 return 1;
             } // Print that we have shot
             else {
@@ -636,7 +501,7 @@ public class Main {
                     }
                 }// find mearest gun
 
-                boolean betterGun= nearestGun != null && nearestGun.getDamage() >= curGun.getDamage();
+                boolean betterGun= nearestGun != null && nearestGun.getDamage() > curGun.getDamage();
 
                 List<Obstacle> ChestList=gameMap.getListChests();
                 List<Obstacle> InsideChestList = new ArrayList<>();
@@ -660,7 +525,7 @@ public class Main {
                 if(nearestPlayerNode!=null) distToPlayer=lengthPath(currentNode, nearestPlayerNode,BlocksNodes,gameMap);
 
                 if (nearestChest!=null &&( (Me.getHp()<=60)
-                        || (!isNearlyFullSet && (distToChest + CHESTPLAYER <= distToPlayer)) )) {
+                        || (!isFullSet && (distToChest + CHESTPLAYER <= distToPlayer)) )) {
 
                     int cnt = 0;
                     boolean is_remove = false;
@@ -724,6 +589,78 @@ public class Main {
     }
 
 
+
+    public static void main(String[] args) throws IOException {
+        Hero hero = new Hero(GAME_ID, PLAYER_NAME,PLAYER_KEY);
+
+        Emitter.Listener onMapUpdate = new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                try {
+                    System.out.println("Start a try");
+                    GameMap gameMap = hero.getGameMap(); // map
+                    gameMap.updateOnUpdateMap(args[0]);
+
+                    if (countToReHeal > 0) countToReHeal--;
+                    if (countToAttack > 0) countToAttack--;
+                    if (countToFire > 0) countToFire--;
+                    Player Me = gameMap.getCurrentPlayer(); // Me
+                    Node currentNode = new Node(Me.getX(), Me.getY());
+                    if (!Me.getIsAlive()) {
+                        System.out.println("You are dead");
+                    }
+                    else {
+                        List<Player> OtherPlayerList = gameMap.getOtherPlayerInfo(); // Other Players List
+                        List<Node> OtherPlayerNodes = new ArrayList<>(); // OtherPlayerNodes
+
+                        for (Player p : OtherPlayerList) {
+                            if (p.getIsAlive() && checkInsideSafeArea(new Node(p.getX(), p.getY()), gameMap.getDarkAreaSize(), gameMap.getMapSize())) {
+                                OtherPlayerNodes.add(new Node(p.getX(), p.getY()));
+                            }
+                        } //  create OtherPlayerNodes by alive players
+
+                        List<Obstacle> Blocks = gameMap.getListIndestructibleObstacles(); // Blocks(Wall+Trap)
+                        Blocks.addAll(gameMap.getListTraps());
+
+                        List<Enemy> ListEnemies = gameMap.getListEnemies(); // List of Enemies
+
+                        List<Node> BlocksNodes = new ArrayList<>(); // BlocksNodes
+
+                        for (Obstacle O : Blocks) {
+
+                            BlocksNodes.add(new Node(O.getX(), O.getY()));
+                        } // creat Blocknodes (wall + trap + other players)
+
+                        BlocksNodes.addAll(OtherPlayerNodes);
+
+
+                        for (Enemy E : ListEnemies) {
+                            Node enemy = new Node(E.getX(), E.getY());
+                            for (int i = -ENEMY; i <= ENEMY; ++i) {
+                                for (int j = -ENEMY; j <= ENEMY; ++j)
+                                    if (Math.abs(i) + Math.abs(j) <= ENEMY) {
+
+                                        BlocksNodes.add(add(new Node(i, j), enemy));
+                                    }
+                            }
+                        } // add block around enemies and check if they are coming
+
+
+                        System.out.println("Return: " + try_all(currentNode, hero, OtherPlayerNodes, BlocksNodes, gameMap));
+                    }
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                System.out.println("===================");
+            }
+        };
+
+        hero.setOnMapUpdate(onMapUpdate);
+        hero.start(SERVER_URL);
+    }
+
+
 }
 //Chưa loại các gun đang dưới chân player khác(ko nhớ fix chưa)
-
