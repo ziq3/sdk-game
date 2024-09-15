@@ -10,7 +10,6 @@ import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
 import java.io.IOException;
 import java.util.*;
-import java.io.FileWriter;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
@@ -151,49 +150,6 @@ public class Main {
                         if (enemyMap.isBlock(time + 1, new Node(i, j), gameMap)) {
                             restrictedNodesWithoutPlayers.add(new Node(i, j));
                         }
-                    }
-                }
-                if (time >= 33 && time <= 55) {
-                    try {
-                        FileWriter writer = new FileWriter(time + ".txt");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(
-                                        (enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (time == 33) {
-                    try {
-                        FileWriter writer = new FileWriter(time + "x.txt");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.cycle.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.write("\n");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.startTime1.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.write("\n");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.startTime2.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
                 List<Obstacle> listConstruct = gameMap.getListTraps();
