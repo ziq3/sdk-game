@@ -10,6 +10,7 @@ import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
 import java.io.IOException;
 import java.util.*;
+import java.io.*;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
@@ -142,6 +143,48 @@ public class Main {
                 time += 1;
                 if (time <= 16) {
                     enemyMap.calcEnemy(gameMap, time);
+                }
+                if (time >= 16) {
+                    try {
+                        FileWriter writer = new FileWriter(time + ".txt");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write((enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (time == 16) {
+                    try {
+                        FileWriter writer = new FileWriter(time + "x.txt");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.cycle.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.write("\n");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.startTime1.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.write("\n");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.startTime2.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 for (int i = 0; i < gameMap.getMapSize(); ++i) {
                     for (int j = 0; j < gameMap.getMapSize(); ++j) {
@@ -284,13 +327,13 @@ public class Main {
                         return 0;
                     }
                 }
-                return gainArmor * 400 / (distance(armor) + 1);
+                return gainArmor * 800 / (distance(armor) + 1);
             }
 
             int getPointHealth(int health) {
                 if (listHealing.size() == 4)
                     return 0;
-                double urgencyFactor = 2 + (100.0 - me.getHp()) / 15;
+                double urgencyFactor = 1 + (100.0 - me.getHp()) / 15;
                 return (int) (health * 100 * urgencyFactor);
             }
 
@@ -308,10 +351,10 @@ public class Main {
                 int myDame = meleeDame + gunDame;
                 int targetDame = 40;
                 if (player.getBulletNum() != 0) {
-                    targetDame = 60;
+                    targetDame = 70;
                 }
-                double factor = myHp * 1.0 / targetHp * myDame * 1.0 / targetDame;
-                return (int) (100 * 100 * factor / (distance(nextToPlayer) + 10));
+                double factor = Math.min(myHp * 1.0 / targetHp * myDame * 1.0 / targetDame, 1);
+                return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 10));
             }
 
             int getPointWeapon(Weapon weapon) {
@@ -320,14 +363,14 @@ public class Main {
                 int pointWeapon = 0;
                 if (weapon.getType() == ElementType.THROWABLE) {
                     if (!haveThrow) {
-                        pointWeapon = weapon.getDamage() - 15;
+                        pointWeapon = weapon.getDamage();
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon = (weapon.getDamage() - meleeDame) * 3;
+                    pointWeapon = (weapon.getDamage() - meleeDame) * 4;
                 }
                 if (weapon.getType() == ElementType.GUN) {
-                    pointWeapon = (weapon.getDamage() - gunDame) * 3;
+                    pointWeapon = (weapon.getDamage() - gunDame) * 4;
                 }
                 return pointWeapon * 100 / (distance(weapon) + 1);
             }
@@ -337,20 +380,20 @@ public class Main {
                     return 0;
                 int pointChest = 0;
                 if (me.getDamageReduction() < 20) {
-                    pointChest += 20 * 400 * (1 - Math.pow(1 - 0.02, 4));
+                    pointChest += 20 * 800 * (1 - Math.pow(1 - 0.02, 4));
                 }
                 if (me.getDamageReduction() == 20 || me.getDamageReduction() == 0) {
-                    pointChest += 5 * 400 * (1 - Math.pow(1 - 0.03, 4)) + 10 * 400 * (1 - Math.pow(1 - 0.05, 4));
+                    pointChest += 5 * 800 * (1 - Math.pow(1 - 0.03, 4)) + 10 * 800 * (1 - Math.pow(1 - 0.05, 4));
                 }
                 pointChest += getPointHealth(20);
                 if (meleeDame <= 45) {
-                    pointChest += (55 - meleeDame) * 300 * (1 - Math.pow(1 - 0.05, 4));
+                    pointChest += (55 - meleeDame) * 400 * (1 - Math.pow(1 - 0.05, 4));
                 }
                 if (meleeDame == 0) {
-                    pointChest += 45 * 300 * (1 - Math.pow(1 - 0.16, 4));
+                    pointChest += 45 * 400 * (1 - Math.pow(1 - 0.16, 4));
                 }
                 if (!haveThrow) {
-                    pointChest += 10 * 100 * (1 - Math.pow(1 - 0.40, 4));
+                    pointChest += 25 * 100 * (1 - Math.pow(1 - 0.40, 4));
                 }
                 return pointChest / (distance(chest) + 4);
             }
@@ -388,8 +431,7 @@ public class Main {
 
             void getArmor(Armor armor) {
                 if (Utils.equal(armor, me)) {
-                    if(armor.getDamageReduce()==10&&(me.getDamageReduction()/5)%2==1)
-                    {
+                    if (armor.getDamageReduce() == 10 && (me.getDamageReduction() / 5) % 2 == 1) {
                         revokeItem("HELMET");
                         return;
                     }
@@ -450,9 +492,13 @@ public class Main {
                 target.add(nearestMelee);
                 target.add(nearestGun);
                 target.add(nearestThrow);
-                for (int i = 0; i < 7; ++i) {
-                    System.out.println(pointItems.get(i));
-                }
+                System.out.println("chest " + pointItems.get(0));
+                System.out.println("player " + pointItems.get(1));
+                System.out.println("health " + pointItems.get(2));
+                System.out.println("armor " + pointItems.get(3));
+                System.out.println("melee " + pointItems.get(4));
+                System.out.println("gun " + pointItems.get(5));
+                System.out.println("throw " + pointItems.get(6));
                 int maxPoint = Collections.max(pointItems);
                 for (int i = 0; i < 7; ++i) {
                     if (pointItems.get(i) == maxPoint) {
