@@ -31,7 +31,6 @@ public class Main {
         Emitter.Listener onMapUpdate = new Emitter.Listener() {
             GameMap gameMap;
             Player me;
-            Inventory myInventory;
             List<List<Integer>> g, trace;
             List<Node> restrictedNodes, restrictedNodesWithoutPlayers;
             List<Player> otherPlayers;
@@ -116,7 +115,6 @@ public class Main {
 
             void init() {
                 me = gameMap.getCurrentPlayer();
-                myInventory = hero.getInventory();
                 gunCooldown -= 1;
                 meleeCooldown -= 1;
                 meleeDame = 0;
@@ -292,8 +290,8 @@ public class Main {
             int getPointHealth(int health) {
                 if (listHealing.size() == 4)
                     return 0;
-                double urgencyFactor = 1 + (100.0 - me.getHp()) / 10;
-                return (int) (health * 200 * urgencyFactor);
+                double urgencyFactor = 2 + (100.0 - me.getHp()) / 15;
+                return (int) (health * 100 * urgencyFactor);
             }
 
             int getPointHealth(HealingItem health) {
@@ -303,7 +301,7 @@ public class Main {
             }
 
             int getPointPlayer(Player player, Node nextToPlayer) {
-                if (player == null || distance(player) == 0)
+                if (player == null || distance(nextToPlayer) == 0)
                     return 0;
                 int myHp = me.getHp() * (100 + me.getDamageReduction()) / 100;
                 int targetHp = player.getHp() * (100 + player.getDamageReduction()) / 100;
@@ -313,7 +311,6 @@ public class Main {
                     targetDame = 60;
                 }
                 double factor = myHp * 1.0 / targetHp * myDame * 1.0 / targetDame;
-                factor = factor * factor;
                 return (int) (100 * 100 * factor / (distance(nextToPlayer) + 10));
             }
 
@@ -391,10 +388,8 @@ public class Main {
 
             void getArmor(Armor armor) {
                 if (Utils.equal(armor, me)) {
-                    List<Armor> listArmors = myInventory.getListArmor();
-                    if (armor.getId().equals("POT")
-                            && (listArmors.size() == 2
-                                    || (listArmors.size() == 1 && listArmors.getFirst().getId().equals("HELMET")))) {
+                    if(armor.getDamageReduce()==10&&(me.getDamageReduction()/5)%2==1)
+                    {
                         revokeItem("HELMET");
                         return;
                     }
@@ -540,6 +535,7 @@ public class Main {
                 System.out.println("gunCooldown " + gunCooldown);
                 System.out.println("meleeCooldown " + meleeCooldown);
                 System.out.println("bullet " + me.getBulletNum());
+                System.out.println("size health " + listHealing.size());
                 int sizeSafeArea = gameMap.getDarkAreaSize();
                 if (previousDarkSide != sizeSafeArea) {
                     sizeSafeArea += 1;
