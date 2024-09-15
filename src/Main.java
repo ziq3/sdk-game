@@ -2,6 +2,7 @@ import io.socket.emitter.Emitter;
 import jsclub.codefest2024.sdk.*;
 import jsclub.codefest2024.sdk.algorithm.PathUtils;
 import jsclub.codefest2024.sdk.base.Node;
+import jsclub.codefest2024.sdk.factory.WeaponFactory;
 import jsclub.codefest2024.sdk.model.*;
 import jsclub.codefest2024.sdk.model.equipments.*;
 import jsclub.codefest2024.sdk.model.obstacles.Obstacle;
@@ -9,6 +10,7 @@ import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
 import java.io.IOException;
 import java.util.*;
+import java.io.FileWriter;
 
 public class Main {
     private static final String SERVER_URL = "https://cf-server.jsclub.dev";
@@ -32,12 +34,14 @@ public class Main {
             Player me;
             Inventory myInventory;
             List<List<Integer>> g, trace;
-            List<Node> restrictedNodes, restrictedNodesWithoutPlayers, otherPlayers;
+            List<Node> restrictedNodes, restrictedNodesWithoutPlayers;
+            List<Player> otherPlayers;
             int meleeCooldown = 0, gunCooldown = 0;
-            Weapon gun, melee;
+            Weapon gun, melee = WeaponFactory.getWeaponById("HAND");
             int meleeDame, gunDame;
             int time = -1;
-            boolean haveGun, haveMelee, haveThrow;
+            boolean haveGun = false, haveMelee = false, haveThrow = false;
+            List<HealingItem> listHealing = new ArrayList<>();
             final EnemyMap enemyMap = new EnemyMap();
 
             void getItem(Node target) {
@@ -49,6 +53,7 @@ public class Main {
             }
 
             void pickupItem() {
+                System.out.println("Pickup item");
                 try {
                     hero.pickupItem();
                 } catch (Exception ignored) {
@@ -56,7 +61,8 @@ public class Main {
             }
 
             void attack(String x) {
-                meleeCooldown = melee.getCooldown() + 1;
+                System.out.println("Attack");
+                meleeCooldown = melee.getCooldown();
                 try {
                     hero.attack(x);
                 } catch (Exception ignored) {
@@ -65,7 +71,11 @@ public class Main {
             }
 
             void shoot(String x) {
-                gunCooldown = gun.getCooldown() + 1;
+                if (me.getBulletNum() == 1) {
+                    haveGun = false;
+                }
+                System.out.println("Shoot");
+                gunCooldown = gun.getCooldown();
                 try {
                     hero.shoot(x);
                 } catch (Exception ignored) {
@@ -73,6 +83,7 @@ public class Main {
             }
 
             void move(String x) {
+                System.out.println("Move");
                 try {
                     hero.move(x);
                 } catch (Exception ignored) {
@@ -80,6 +91,7 @@ public class Main {
             }
 
             void useItem(String x) {
+                System.out.println("Use item " + x);
                 try {
                     hero.useItem(x);
                 } catch (Exception ignored) {
@@ -87,6 +99,8 @@ public class Main {
             }
 
             void throwAttack(String x) {
+                System.out.println("Throw attack");
+                haveThrow = false;
                 try {
                     hero.throwItem(x);
                 } catch (Exception ignored) {
@@ -94,6 +108,7 @@ public class Main {
             }
 
             void revokeItem(String x) {
+                System.out.println("Revoke item " + x);
                 try {
                     hero.revokeItem(x);
                 } catch (Exception ignored) {
@@ -105,16 +120,22 @@ public class Main {
                 myInventory = hero.getInventory();
                 gunCooldown -= 1;
                 meleeCooldown -= 1;
-                gun = myInventory.getGun();
-                melee = myInventory.getMelee();
                 meleeDame = 0;
                 gunDame = 0;
-                haveGun = gun != null;
-                haveMelee = melee.getId() != "HAND";
-                haveThrow = myInventory.getThrowable() != null;
                 restrictedNodesWithoutPlayers = new ArrayList<>();
                 restrictedNodes = new ArrayList<>();
                 otherPlayers = new ArrayList<>();
+                for (Player p : gameMap.getOtherPlayerInfo()) {
+                    if (p.getIsAlive()) {
+                        otherPlayers.add(p);
+                    }
+                }
+                if (me.getHp() == 0) {
+                    haveGun = false;
+                    haveMelee = false;
+                    haveThrow = false;
+                    listHealing.clear();
+                }
                 if (haveMelee) {
                     meleeDame = melee.getDamage();
                 }
@@ -132,6 +153,49 @@ public class Main {
                         }
                     }
                 }
+                if (time >= 33 && time <= 55) {
+                    try {
+                        FileWriter writer = new FileWriter(time + ".txt");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(
+                                        (enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (time == 33) {
+                    try {
+                        FileWriter writer = new FileWriter(time + "x.txt");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.cycle.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.write("\n");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.startTime1.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.write("\n");
+                        for (int i = 0; i < 120; ++i) {
+                            for (int j = 0; j < 120; ++j) {
+                                writer.write(enemyMap.startTime2.get(i).get(j) + " ");
+                            }
+                            writer.write("\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 List<Obstacle> listConstruct = gameMap.getListTraps();
                 listConstruct.addAll(gameMap.getListIndestructibleObstacles());
                 listConstruct.addAll(gameMap.getListChests());
@@ -140,15 +204,6 @@ public class Main {
                 }
 
                 restrictedNodesWithoutPlayers.addAll(restrictedNodes);
-                List<Player> allPlayer = gameMap.getOtherPlayerInfo();
-                for (Player p : allPlayer) {
-                    if (Utils.equal(p, me)) {
-                        continue;
-                    }
-                    if (p.getIsAlive()) {
-                        otherPlayers.add(new Node(p.getX(), p.getY()));
-                    }
-                }
                 for (Node p : otherPlayers) {
                     for (int i = 0; i < 4; ++i) {
                         Node nearPlayer = new Node(p.getX(), p.getY());
@@ -279,13 +334,10 @@ public class Main {
             }
 
             int getPointHealth(int health) {
-                if (myInventory.getListHealingItem().size() == 4)
+                if (listHealing.size() == 4)
                     return 0;
-                if (me.getHp() > 95) {
-                    return health * 100;
-                } else {
-                    return health * 200;
-                }
+                double urgencyFactor = 1 + (100.0 - me.getHp()) / 10;
+                return (int) (health * 100 * urgencyFactor);
             }
 
             int getPointHealth(HealingItem health) {
@@ -294,10 +346,19 @@ public class Main {
                 return getPointHealth(health.getHealingHP()) / (distance(health) + health.getUsageTime() + 1);
             }
 
-            int getPointPlayer(Node nextToPlayer) {
-                if (distance(nextToPlayer) == 0)
+            int getPointPlayer(Player player, Node nextToPlayer) {
+                if (player == null || distance(player) == 0)
                     return 0;
-                return (meleeDame + gunDame - (100 - me.getHp()) * 2) * 180 / (distance(nextToPlayer) + 10);
+                int myHp = me.getHp() * (100 + me.getDamageReduction()) / 100;
+                int targetHp = player.getHp() * (100 + player.getDamageReduction()) / 100;
+                int myDame = meleeDame + gunDame;
+                int targetDame = 40;
+                if (player.getBulletNum() != 0) {
+                    targetDame = 60;
+                }
+                double factor = myHp * 1.0 / targetHp * myDame * 1.0 / targetDame;
+                factor = factor * factor;
+                return (int) (100 * 100 * factor / (distance(nextToPlayer) + 10));
             }
 
             int getPointWeapon(Weapon weapon) {
@@ -306,7 +367,7 @@ public class Main {
                 int pointWeapon = 0;
                 if (weapon.getType() == ElementType.THROWABLE) {
                     if (!haveThrow) {
-                        pointWeapon = weapon.getDamage() - 10;
+                        pointWeapon = weapon.getDamage() - 15;
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
@@ -323,39 +384,50 @@ public class Main {
                     return 0;
                 int pointChest = 0;
                 if (me.getDamageReduction() < 20) {
-                    pointChest += 20 * 3 * 4 * 2;
+                    pointChest += 20 * 400 * (1 - Math.pow(1 - 0.02, 4));
                 }
                 if (me.getDamageReduction() == 20 || me.getDamageReduction() == 0) {
-                    pointChest += 5 * 3 * 4 * 5 + 10 * 3 * 4 * 3;
+                    pointChest += 5 * 400 * (1 - Math.pow(1 - 0.03, 4)) + 10 * 400 * (1 - Math.pow(1 - 0.05, 4));
                 }
-                pointChest += getPointHealth(15);
+                pointChest += getPointHealth(20);
                 if (meleeDame <= 45) {
-                    pointChest += (55 - meleeDame) * 3 * 4 * 4;
+                    pointChest += (55 - meleeDame) * 300 * (1 - Math.pow(1 - 0.05, 4));
                 }
                 if (meleeDame == 0) {
-                    pointChest += 45 * 3 * 4 * 16;
+                    pointChest += 45 * 300 * (1 - Math.pow(1 - 0.16, 4));
                 }
                 if (!haveThrow) {
-                    pointChest += 15 * 1 * 4 * 40;
+                    pointChest += 10 * 100 * (1 - Math.pow(1 - 0.40, 4));
                 }
                 return pointChest / (distance(chest) + 4);
             }
 
-            void getWeapon(Node weapon, int type) {
+            void getWeapon(Weapon weapon, int type) {
                 if (Utils.equal(weapon, me)) {
                     if (type == 4) {
                         if (haveMelee) {
                             System.out.println("bo melee");
                             revokeItem(melee.getId());
+                            haveMelee = false;
                             return;
+                        } else {
+                            haveMelee = true;
+                            melee = weapon;
                         }
                     }
                     if (type == 5) {
                         if (haveGun) {
                             System.out.println("bo gun");
                             revokeItem(gun.getId());
+                            haveGun = false;
                             return;
+                        } else {
+                            gun = weapon;
+                            haveGun = true;
                         }
+                    }
+                    if (type == 6) {
+                        haveThrow = true;
                     }
                 }
                 getItem(weapon);
@@ -392,15 +464,20 @@ public class Main {
                     }
                 }
                 List<Node> nextToPlayer = new ArrayList<>();
-                for (Node p : otherPlayers) {
+                Node nearestNextToChest = nearestNode(nextToChest);
+                Player nearestPlayer = otherPlayers.getFirst();
+                Node nearestNextToPlayer = nearestNode(nextToPlayer);
+                for (Player p : otherPlayers) {
                     if (!Utils.isInsideSafeArea(p, gameMap))
                         continue;
                     for (int i = 0; i < 4; ++i) {
-                        nextToPlayer.add(Utils.add(p, DIRECTIONS2.get(i)));
+                        Node addNode = Utils.add(p, DIRECTIONS2.get(i));
+                        if (distance(addNode) < distance(nearestNextToPlayer)) {
+                            nearestNextToPlayer = addNode;
+                            nearestPlayer = p;
+                        }
                     }
                 }
-                Node nearestNextToChest = nearestNode(nextToChest);
-                Node nearestNextToPlayer = nearestNode(nextToPlayer);
                 HealingItem nearestHealth = nearestNode(gameMap.getListHealingItems());
                 Armor nearestArmor = nearestNode(gameMap.getListArmors());
                 Weapon nearestMelee = nearestNode(gameMap.getAllMelee());
@@ -408,7 +485,7 @@ public class Main {
                 Weapon nearestThrow = nearestNode(gameMap.getAllThrowable());
                 List<Integer> pointItems = new ArrayList<>();
                 pointItems.add(getPointChest(nearestNextToChest));
-                pointItems.add(getPointPlayer(nearestNextToPlayer));
+                pointItems.add(getPointPlayer(nearestPlayer, nearestNextToPlayer));
                 pointItems.add(getPointHealth(nearestHealth));
                 pointItems.add(getPointArmor(nearestArmor));
                 pointItems.add(getPointWeapon(nearestMelee));
@@ -438,17 +515,60 @@ public class Main {
                             move(getPath(target.get(i)));
                         }
                         if (i == 2) {
+                            if (Utils.equal(target.get(i), me)) {
+                                listHealing.add(nearestHealth);
+                            }
                             getItem(target.get(i));
                         }
                         if (i == 3) {
                             getArmor(nearestArmor);
                         }
-                        if (i >= 4) {
-                            getWeapon(target.get(i), i);
+                        if (i == 4) {
+                            getWeapon(nearestMelee, i);
+                        }
+                        if (i == 5) {
+                            getWeapon(nearestGun, i);
+                        }
+                        if (i == 6) {
+                            getWeapon(nearestThrow, i);
                         }
                         return;
                     }
                 }
+            }
+
+            boolean tryHealth() {
+                Node nearestPlayerReal = otherPlayers.getFirst();
+                for (Node p : otherPlayers) {
+                    if (Utils.distance(p, me, gameMap) < Utils.distance(nearestPlayerReal, me, gameMap)) {
+                        nearestPlayerReal = p;
+                    }
+                }
+                int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
+                int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
+                int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
+                int maxTimeUsage = Math.max(timeToReach, Math.min(meleeCooldown, gunCooldown));
+                if (timeToReach > 1) {
+                    int maxTimeSafe = 0;
+                    for (int i = 1; i <= 4; ++i) {
+                        if (enemyMap.isBlock(time + i, me, gameMap))
+                            break;
+                        maxTimeSafe = i;
+                    }
+                    maxTimeUsage = Math.min(maxTimeSafe, timeToReach);
+                }
+                if (!listHealing.isEmpty()) {
+                    listHealing.sort((a, b) -> b.getHealingHP() - a.getHealingHP());
+                }
+                for (HealingItem item : listHealing) {
+                    if ((me.getHp() + item.getHealingHP() <= 105 || me.getHp() <= 55)
+                            && maxTimeUsage >= item.getUsageTime()) {
+                        useItem(item.getId());
+                        listHealing.remove(item);
+                        return true;
+                    }
+                }
+                return false;
             }
 
             @Override
@@ -507,32 +627,8 @@ public class Main {
                         }
                     }
                 }
-                boolean danger = false;
-                for (Node p : restrictedNodes) {
-                    if (Utils.equal(p, me)) {
-                        danger = true;
-                        break;
-                    }
-                }
-                if (!danger) {
-                    int maxTimeSafe = 0;
-                    for (int i = 1; i <= 4; ++i) {
-                        if (enemyMap.isBlock(time + i, me, gameMap))
-                            break;
-                        maxTimeSafe = i;
-                    }
-                    Node nearestPlayerReal = nearestNode(otherPlayers);
-                    List<HealingItem> myItems = myInventory.getListHealingItem();
-                    for (HealingItem item : myItems) {
-                        int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
-                        int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
-                        int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
-                        if ((me.getHp() + item.getHealingHP() <= 105 || me.getHp() <= 55)
-                                && Math.min(maxTimeSafe, timeToReach) >= item.getUsageTime()) {
-                            useItem(item.getId());
-                            return;
-                        }
-                    }
+                if (tryHealth()) {
+                    return;
                 }
                 if (haveThrow) {
                     List<Node> targetThrow = new ArrayList<>();
