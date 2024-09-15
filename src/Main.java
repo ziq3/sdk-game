@@ -82,6 +82,8 @@ public class Main {
             }
 
             void move(String x) {
+                if (x == "")
+                    return;
                 System.out.println("Move");
                 try {
                     hero.move(x);
@@ -253,6 +255,9 @@ public class Main {
             }
 
             String getPath(Node target) {
+                if (Utils.equal(target, me)) {
+                    return "";
+                }
                 while (true) {
                     int dir = trace.get(target.x).get(target.y);
                     String stringDir = DIRECTIONS_STR.get(dir);
@@ -344,7 +349,7 @@ public class Main {
             }
 
             int getPointPlayer(Player player, Node nextToPlayer) {
-                if (player == null || distance(nextToPlayer) == 0)
+                if (player == null)
                     return 0;
                 int myHp = me.getHp() * (100 + me.getDamageReduction()) / 100;
                 int targetHp = player.getHp() * (100 + player.getDamageReduction()) / 100;
@@ -354,7 +359,7 @@ public class Main {
                     targetDame = 70;
                 }
                 double factor = Math.min(myHp * 1.0 / targetHp * myDame * 1.0 / targetDame, 1);
-                return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 10));
+                return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 8));
             }
 
             int getPointWeapon(Weapon weapon) {
