@@ -293,7 +293,7 @@ public class Main {
                 if (listHealing.size() == 4)
                     return 0;
                 double urgencyFactor = 1 + (100.0 - me.getHp()) / 10;
-                return (int) (health * 100 * urgencyFactor);
+                return (int) (health * 200 * urgencyFactor);
             }
 
             int getPointHealth(HealingItem health) {
