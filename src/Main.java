@@ -38,7 +38,7 @@ public class Main {
             int meleeCooldown = 0, gunCooldown = 0;
             Weapon gun, melee = WeaponFactory.getWeaponById("HAND");
             int meleeDame, gunDame;
-            int time = -1;
+            int time = -1, previousDarkSide = 0;
             boolean haveGun = false, haveMelee = false, haveThrow = false;
             List<HealingItem> listHealing = new ArrayList<>();
             final EnemyMap enemyMap = new EnemyMap();
@@ -540,14 +540,18 @@ public class Main {
                 System.out.println("gunCooldown " + gunCooldown);
                 System.out.println("meleeCooldown " + meleeCooldown);
                 System.out.println("bullet " + me.getBulletNum());
-                if (!Utils.isInsideSafeArea(me, gameMap)) {
+                int sizeSafeArea = gameMap.getDarkAreaSize();
+                if (previousDarkSide != sizeSafeArea) {
+                    sizeSafeArea += 1;
+                }
+                if (!PathUtils.checkInsideSafeArea(me, sizeSafeArea, gameMap.getMapSize())) {
                     Node nearest = new Node(-1, -1);
                     for (int i = 0; i < gameMap.getMapSize(); ++i) {
                         for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             Node addNode = new Node(i, j);
                             if (distance(addNode) < distance(nearest)
-                                    && Utils.isInsideSafeArea(addNode,
-                                            gameMap)) {
+                                    && PathUtils.checkInsideSafeArea(addNode, sizeSafeArea,
+                                            gameMap.getMapSize())) {
                                 nearest = addNode;
                             }
                         }
@@ -555,6 +559,7 @@ public class Main {
                     move(getPath(nearest));
                     return;
                 }
+                previousDarkSide = gameMap.getDarkAreaSize();
                 if (haveMelee && meleeCooldown <= 0) {
                     for (Node p : otherPlayers) {
                         if (Utils.distance(me, p, gameMap) == 1) {
