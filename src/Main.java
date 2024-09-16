@@ -202,6 +202,7 @@ public class Main {
 
                 restrictedNodesWithoutPlayers.addAll(restrictedNodes);
                 for (Node p : otherPlayers) {
+                    restrictedNodes.add(p);
                     for (int i = 0; i < 4; ++i) {
                         Node nearPlayer = new Node(p.getX(), p.getY());
                         // gun.range()-1
