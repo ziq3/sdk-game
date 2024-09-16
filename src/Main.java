@@ -143,9 +143,7 @@ public class Main {
                     gunDame = gun.getDamage();
                 }
                 time += 1;
-                if (time <= 16) {
-                    enemyMap.calcEnemy(gameMap, time);
-                }
+                enemyMap.calcEnemy(gameMap, time);
                 if (time >= 16) {
                     try {
                         FileWriter writer = new FileWriter(time + ".txt");
@@ -587,6 +585,7 @@ public class Main {
                 System.out.println("meleeCooldown " + meleeCooldown);
                 System.out.println("bullet " + me.getBulletNum());
                 System.out.println("size health " + listHealing.size());
+                System.out.println("time " + time);
                 int sizeSafeArea = gameMap.getDarkAreaSize();
                 if (previousDarkSide != sizeSafeArea) {
                     sizeSafeArea += 1;
