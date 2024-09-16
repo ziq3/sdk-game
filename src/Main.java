@@ -358,7 +358,7 @@ public class Main {
                     targetDame = 70;
                 }
                 double factor = Math.min(myHp * 1.0 / targetHp * myDame * 1.0 / targetDame, 1);
-                factor=factor*factor;
+                factor = factor * factor;
                 return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 8));
             }
 
@@ -540,26 +540,26 @@ public class Main {
             }
 
             boolean tryHealth() {
-                Node nearestPlayerReal = otherPlayers.getFirst();
-                for (Node p : otherPlayers) {
-                    if (Utils.distance(p, me, gameMap) < Utils.distance(nearestPlayerReal, me, gameMap)) {
-                        nearestPlayerReal = p;
+                int timeToReach = Integer.MAX_VALUE;
+                if (!otherPlayers.isEmpty()) {
+                    Node nearestPlayerReal = otherPlayers.getFirst();
+                    for (Node p : otherPlayers) {
+                        if (Utils.distance(p, me, gameMap) < Utils.distance(nearestPlayerReal, me, gameMap)) {
+                            nearestPlayerReal = p;
+                        }
                     }
+                    int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
+                    int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
+                    timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
                 }
-                int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
-                int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
-                int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
                 int maxTimeUsage = timeToReach;
-                if(haveGun&&haveMelee)
-                {
+                if (haveGun && haveMelee) {
                     maxTimeUsage = Math.max(maxTimeUsage, Math.min(gunCooldown, meleeCooldown));
                 }
-                if(haveGun&&!haveMelee)
-                {
+                if (haveGun && !haveMelee) {
                     maxTimeUsage = Math.max(maxTimeUsage, gunCooldown);
                 }
-                if(!haveGun&&haveMelee)
-                {
+                if (!haveGun && haveMelee) {
                     maxTimeUsage = Math.max(maxTimeUsage, meleeCooldown);
                 }
                 if (timeToReach > 1) {
