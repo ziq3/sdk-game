@@ -547,7 +547,19 @@ public class Main {
                 int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
                 int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
                 int timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
-                int maxTimeUsage = Math.max(timeToReach, Math.min(meleeCooldown, gunCooldown));
+                int maxTimeUsage = timeToReach;
+                if(haveGun&&haveMelee)
+                {
+                    maxTimeUsage = Math.max(maxTimeUsage, Math.min(gunCooldown, meleeCooldown));
+                }
+                if(haveGun&&!haveMelee)
+                {
+                    maxTimeUsage = Math.max(maxTimeUsage, gunCooldown);
+                }
+                if(!haveGun&&haveMelee)
+                {
+                    maxTimeUsage = Math.max(maxTimeUsage, meleeCooldown);
+                }
                 if (timeToReach > 1) {
                     int maxTimeSafe = 0;
                     for (int i = 1; i <= 4; ++i) {
