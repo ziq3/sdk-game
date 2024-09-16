@@ -358,6 +358,7 @@ public class Main {
                     targetDame = 70;
                 }
                 double factor = Math.min(myHp * 1.0 / targetHp * myDame * 1.0 / targetDame, 1);
+                factor=factor*factor;
                 return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 8));
             }
 
