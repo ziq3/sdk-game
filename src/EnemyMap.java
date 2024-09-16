@@ -40,17 +40,19 @@ public class EnemyMap {
     for (Node p : enemies) {
       int enemyCountCurrent = enemyCount.get(p.x).get(p.y) + 1;
       enemyCount.get(p.x).set(p.y, enemyCountCurrent);
+      if (enemyCountCurrent >= 3 && enemyCountCurrent % 2 == 1
+          && cycle.get(p.x).get(p.y) != time - startTime1.get(p.x).get(p.y)) {
+        dfs(p, time - startTime1.get(p.x).get(p.y), gameMap);
+      }
+      if (enemyCountCurrent >= 4 && enemyCountCurrent % 2 == 0
+          && cycle.get(p.x).get(p.y) != time - startTime2.get(p.x).get(p.y)) {
+        dfs(p, time - startTime2.get(p.x).get(p.y), gameMap);
+      }
       if (enemyCountCurrent % 2 == 1) {
         startTime1.get(p.x).set(p.y, time);
       }
       if (enemyCountCurrent % 2 == 0) {
         startTime2.get(p.x).set(p.y, time);
-      }
-      if (enemyCountCurrent >= 3 && time % 2 == 1 && cycle.get(p.x).get(p.y) != time - startTime1.get(p.x).get(p.y)) {
-        dfs(p, time - startTime1.get(p.x).get(p.y), gameMap);
-      }
-      if (enemyCountCurrent >= 4 && time % 2 == 0 && cycle.get(p.x).get(p.y) == time - startTime2.get(p.x).get(p.y)) {
-        dfs(p, time - startTime2.get(p.x).get(p.y), gameMap);
       }
     }
   }
