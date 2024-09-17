@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import jsclub.codefest2024.sdk.model.weapon.*;
 import jsclub.codefest2024.sdk.algorithm.PathUtils;
 import jsclub.codefest2024.sdk.base.Node;
 import jsclub.codefest2024.sdk.model.GameMap;
@@ -37,5 +37,32 @@ public class Utils {
 
     static boolean isInsideSafeArea(Node p, GameMap gameMap) {
         return PathUtils.checkInsideSafeArea(p, gameMap.getDarkAreaSize(), gameMap.getMapSize());
+    }
+
+    static int getDame(Weapon weapon) {
+        if (weapon == null)
+            return 0;
+        return weapon.getDamage();
+    }
+
+    static int stepToKill(Weapon gun, Weapon melee, int health) {
+        if (gun == null && melee == null)
+            return Integer.MAX_VALUE;
+        if (gun == null)
+            return (health + melee.getDamage() - 1) / melee.getDamage() * melee.getCooldown();
+        if (melee == null)
+            return (health + gun.getDamage() - 1) / gun.getDamage() * gun.getCooldown();
+        int diffCooldown = melee.getCooldown() - gun.getCooldown();
+        health -= melee.getDamage();
+        if (health <= 0)
+            return 1;
+        health -= gun.getDamage();
+        if (health <= 0)
+            return 2;
+        health -= gun.getDamage();
+        if (health <= 0)
+            return 2 + gun.getCooldown();
+        health -= melee.getDamage();
+        return 1 + gun.getCooldown() + diffCooldown;
     }
 }

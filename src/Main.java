@@ -8,7 +8,7 @@ import jsclub.codefest2024.sdk.model.equipments.*;
 import jsclub.codefest2024.sdk.model.obstacles.Obstacle;
 import jsclub.codefest2024.sdk.model.players.Player;
 import jsclub.codefest2024.sdk.model.weapon.Weapon;
-import java.io.IOException;
+
 import java.util.*;
 import java.io.*;
 
@@ -37,11 +37,11 @@ public class Main {
             List<Player> otherPlayers;
             int meleeCooldown = 0, gunCooldown = 0;
             Weapon gun, melee = WeaponFactory.getWeaponById("HAND");
-            int meleeDame, gunDame;
             int time = -1, previousDarkSide = 0;
             boolean haveGun = false, haveMelee = false, haveThrow = false;
             List<HealingItem> listHealing = new ArrayList<>();
             final EnemyMap enemyMap = new EnemyMap();
+            TrackPlayer trackPlayer = new TrackPlayer();
 
             void getItem(Node target) {
                 if (Utils.equal(me, target)) {
@@ -117,11 +117,14 @@ public class Main {
             }
 
             void init() {
+                time += 1;
+                if (time == 0) {
+                    trackPlayer.init(gameMap.getOtherPlayerInfo());
+                }
+                trackPlayer.update(gameMap);
                 me = gameMap.getCurrentPlayer();
                 gunCooldown -= 1;
                 meleeCooldown -= 1;
-                meleeDame = 0;
-                gunDame = 0;
                 restrictedNodesWithoutPlayers = new ArrayList<>();
                 restrictedNodes = new ArrayList<>();
                 otherPlayers = new ArrayList<>();
@@ -136,55 +139,42 @@ public class Main {
                     haveThrow = false;
                     listHealing.clear();
                 }
-                if (haveMelee) {
-                    meleeDame = melee.getDamage();
-                }
-                if (haveGun) {
-                    gunDame = gun.getDamage();
-                }
-                time += 1;
                 enemyMap.calcEnemy(gameMap, time);
-                if (time >= 16) {
-                    try {
-                        FileWriter writer = new FileWriter(time + ".txt");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write((enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
-                            }
-                            writer.write("\n");
+                try {
+                    FileWriter writer = new FileWriter(time + ".txt");
+                    for (int i = 0; i < 120; ++i) {
+                        for (int j = 0; j < 120; ++j) {
+                            writer.write((enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
                         }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        writer.write("\n");
                     }
+                    writer.close();
+                } catch (IOException e) {
                 }
-                if (time == 16) {
-                    try {
-                        FileWriter writer = new FileWriter(time + "x.txt");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.cycle.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
+                try {
+                    FileWriter writer = new FileWriter(time + "x.txt");
+                    for (int i = 0; i < 120; ++i) {
+                        for (int j = 0; j < 120; ++j) {
+                            writer.write(enemyMap.cycle.get(i).get(j) + " ");
                         }
                         writer.write("\n");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.startTime1.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.write("\n");
-                        for (int i = 0; i < 120; ++i) {
-                            for (int j = 0; j < 120; ++j) {
-                                writer.write(enemyMap.startTime2.get(i).get(j) + " ");
-                            }
-                            writer.write("\n");
-                        }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
+                    writer.write("\n");
+                    for (int i = 0; i < 120; ++i) {
+                        for (int j = 0; j < 120; ++j) {
+                            writer.write(enemyMap.startTime1.get(i).get(j) + " ");
+                        }
+                        writer.write("\n");
+                    }
+                    writer.write("\n");
+                    for (int i = 0; i < 120; ++i) {
+                        for (int j = 0; j < 120; ++j) {
+                            writer.write(enemyMap.startTime2.get(i).get(j) + " ");
+                        }
+                        writer.write("\n");
+                    }
+                    writer.close();
+                } catch (IOException e) {
                 }
                 for (int i = 0; i < gameMap.getMapSize(); ++i) {
                     for (int j = 0; j < gameMap.getMapSize(); ++j) {
@@ -351,13 +341,10 @@ public class Main {
                 if (player == null)
                     return 0;
                 int myHp = me.getHp() * (100 + me.getDamageReduction()) / 100;
-                int targetHp = player.getHp() * (100 + player.getDamageReduction()) / 100;
-                int myDame = meleeDame + gunDame;
-                int targetDame = 40;
-                if (player.getBulletNum() != 0) {
-                    targetDame = 70;
-                }
-                double factor = Math.min(myHp * 1.0 / targetHp * myDame * 1.0 / targetDame, 1);
+                int playerHp = player.getHp() * (100 + player.getDamageReduction()) / 100;
+                int stepToKillMe = trackPlayer.getStepToKill(player.getPlayerName(), myHp);
+                int stepToKillPlayer = Utils.stepToKill(gun, melee, playerHp);
+                double factor = Math.min(stepToKillMe * 1.0 / stepToKillPlayer, 1);
                 factor = factor * factor;
                 return (int) (100 * (player.getHp() + 35) * factor / (distance(nextToPlayer) + 8));
             }
@@ -372,10 +359,10 @@ public class Main {
                     }
                 }
                 if (weapon.getType() == ElementType.MELEE) {
-                    pointWeapon = (weapon.getDamage() - meleeDame) * 4;
+                    pointWeapon = (weapon.getDamage() - Utils.getDame(melee)) * 4;
                 }
                 if (weapon.getType() == ElementType.GUN) {
-                    pointWeapon = (weapon.getDamage() - gunDame) * 4;
+                    pointWeapon = (weapon.getDamage() - Utils.getDame(gun)) * 4;
                 }
                 return pointWeapon * 100 / (distance(weapon) + 1);
             }
@@ -391,10 +378,10 @@ public class Main {
                     pointChest += 5 * 800 * (1 - Math.pow(1 - 0.03, 4)) + 10 * 800 * (1 - Math.pow(1 - 0.05, 4));
                 }
                 pointChest += getPointHealth(20);
-                if (meleeDame <= 45) {
-                    pointChest += (55 - meleeDame) * 400 * (1 - Math.pow(1 - 0.05, 4));
+                if (Utils.getDame(melee) <= 45) {
+                    pointChest += (55 - Utils.getDame(melee)) * 400 * (1 - Math.pow(1 - 0.05, 4));
                 }
-                if (meleeDame == 0) {
+                if (Utils.getDame(melee) == 0) {
                     pointChest += 45 * 400 * (1 - Math.pow(1 - 0.16, 4));
                 }
                 if (!haveThrow) {
@@ -514,6 +501,9 @@ public class Main {
                             getChest(target.get(i));
                         }
                         if (i == 1) {
+                            int myHp = me.getHp() * (100 + me.getDamageReduction()) / 100;
+                            System.out.println(
+                                    "Step to kill: " + trackPlayer.getStepToKill(nearestPlayer.getPlayerName(), myHp));
                             move(getPath(target.get(i)));
                         }
                         if (i == 2) {
