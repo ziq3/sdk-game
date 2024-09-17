@@ -312,17 +312,16 @@ public class Main {
             int getPointArmor(Armor armor) {
                 if (armor == null)
                     return 0;
+                int myArmor = me.getDamageReduction();
                 int gainArmor = armor.getDamageReduce();
-                List<Armor> listArmors = hero.getInventory().getListArmor();
-                if (!armor.getId().equals("VEST")) {
-                    for (Armor currentArmor : listArmors) {
-                        if (!currentArmor.getId().equals("VEST")) {
-                            gainArmor -= currentArmor.getDamageReduce();
-                        }
-                    }
+                if (armor.getDamageReduce() < 20) {
+                    int hatArmor = myArmor;
+                    if (hatArmor >= 20)
+                        hatArmor -= 20;
+                    gainArmor = gainArmor - hatArmor;
                 } else {
-                    if (me.getDamageReduction() >= 20) {
-                        return 0;
+                    if (myArmor >= 20) {
+                        gainArmor = 0;
                     }
                 }
                 return gainArmor * 800 / (distance(armor) + 1);
@@ -381,7 +380,7 @@ public class Main {
                 if (me.getDamageReduction() == 20 || me.getDamageReduction() == 0) {
                     pointChest += 5 * 800 * (1 - Math.pow(1 - 0.03, 4)) + 10 * 800 * (1 - Math.pow(1 - 0.05, 4));
                 }
-                pointChest += getPointHealth(20);
+                pointChest += getPointHealth(15);
                 if (Utils.getDame(melee) <= 45) {
                     pointChest += (55 - Utils.getDame(melee)) * 400 * (1 - Math.pow(1 - 0.05, 4));
                 }
