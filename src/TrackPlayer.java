@@ -70,7 +70,7 @@ public class TrackPlayer {
   int getStepToKill(String name, int health) {
     for (int i = 0; i < playerName.size(); i++) {
       if (playerName.get(i).equals(name)) {
-        return Utils.stepToKill(playerMelees.get(i), playerGuns.get(i), health);
+        return Utils.stepToKill(playerGuns.get(i), playerMelees.get(i), health);
       }
     }
     return 0;
