@@ -139,6 +139,8 @@ public class Main {
                     haveGun = false;
                     haveMelee = false;
                     haveThrow = false;
+                    gun = null;
+                    melee = WeaponFactory.getWeaponById("HAND");
                     listHealing.clear();
                 }
                 enemyMap.calcEnemy(gameMap, time);
