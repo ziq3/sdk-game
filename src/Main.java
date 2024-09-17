@@ -42,6 +42,7 @@ public class Main {
             List<HealingItem> listHealing = new ArrayList<>();
             final EnemyMap enemyMap = new EnemyMap();
             TrackPlayer trackPlayer = new TrackPlayer();
+            int stepHealing = 0;
 
             void getItem(Node target) {
                 if (Utils.equal(me, target)) {
@@ -121,6 +122,7 @@ public class Main {
                 if (time == 0) {
                     trackPlayer.init(gameMap.getOtherPlayerInfo());
                 }
+                stepHealing -= 1;
                 trackPlayer.update(gameMap);
                 me = gameMap.getCurrentPlayer();
                 gunCooldown -= 1;
@@ -569,6 +571,7 @@ public class Main {
                             && maxTimeUsage >= item.getUsageTime()) {
                         useItem(item.getId());
                         listHealing.remove(item);
+                        stepHealing = item.getUsageTime();
                         return true;
                     }
                 }
@@ -580,6 +583,9 @@ public class Main {
                 gameMap = hero.getGameMap();
                 gameMap.updateOnUpdateMap(args[0]);
                 init();
+                if (stepHealing > 0) {
+                    return;
+                }
                 bfs();
                 System.out.println("Vi tri hien tai " + me.getX() + " " + me.getY());
                 System.out.println("Co sung " + haveGun);
