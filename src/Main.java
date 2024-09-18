@@ -73,6 +73,7 @@ public class Main {
             void shoot(String x) {
                 if (me.getBulletNum() == 1) {
                     haveGun = false;
+                    gun = null;
                 }
                 System.out.println("Shoot");
                 gunCooldown = gun.getCooldown();
