@@ -71,12 +71,12 @@ public class Main {
             }
 
             void shoot(String x) {
+                gunCooldown = gun.getCooldown();
                 if (me.getBulletNum() == 1) {
                     haveGun = false;
                     gun = null;
                 }
                 System.out.println("Shoot");
-                gunCooldown = gun.getCooldown();
                 try {
                     hero.shoot(x);
                 } catch (Exception ignored) {
@@ -123,6 +123,11 @@ public class Main {
                 if (time == 0) {
                     trackPlayer.init(gameMap.getOtherPlayerInfo());
                 }
+                int currentDarkSide=gameMap.getDarkAreaSize();
+                if (currentDarkSide != previousDarkSide) {
+                    gameMap.setDarkAreaSize(currentDarkSide + 1);
+                }
+                previousDarkSide = currentDarkSide;
                 stepHealing -= 1;
                 trackPlayer.update(gameMap);
                 me = gameMap.getCurrentPlayer();
@@ -598,18 +603,13 @@ public class Main {
                 System.out.println("bullet " + me.getBulletNum());
                 System.out.println("size health " + listHealing.size());
                 System.out.println("time " + time);
-                int sizeSafeArea = gameMap.getDarkAreaSize();
-                if (previousDarkSide != sizeSafeArea) {
-                    sizeSafeArea += 1;
-                }
-                if (!PathUtils.checkInsideSafeArea(me, sizeSafeArea, gameMap.getMapSize())) {
+                if (!Utils.isInsideSafeArea(me, gameMap)) {
                     Node nearest = new Node(-1, -1);
                     for (int i = 0; i < gameMap.getMapSize(); ++i) {
                         for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             Node addNode = new Node(i, j);
                             if (distance(addNode) < distance(nearest)
-                                    && PathUtils.checkInsideSafeArea(addNode, sizeSafeArea,
-                                            gameMap.getMapSize())) {
+                                    && Utils.isInsideSafeArea(addNode, gameMap)) {
                                 nearest = addNode;
                             }
                         }
@@ -617,7 +617,6 @@ public class Main {
                     move(getPath(nearest));
                     return;
                 }
-                previousDarkSide = gameMap.getDarkAreaSize();
                 if (haveMelee && meleeCooldown <= 0) {
                     for (Node p : otherPlayers) {
                         if (Utils.distance(me, p, gameMap) == 1) {

@@ -40,20 +40,20 @@ public class EnemyMap {
     for (Node p : enemies) {
       int enemyCountCurrent = enemyCount.get(p.x).get(p.y) + 1;
       enemyCount.get(p.x).set(p.y, enemyCountCurrent);
-      if (enemyCountCurrent >= 3 && enemyCountCurrent % 2 == 1
-          && cycle.get(p.x).get(p.y) != time - startTime1.get(p.x).get(p.y)
-          && time - startTime1.get(p.x).get(p.y) < 20) {
-        dfs(p, time - startTime1.get(p.x).get(p.y), gameMap);
-      }
-      if (enemyCountCurrent >= 4 && enemyCountCurrent % 2 == 0
-          && cycle.get(p.x).get(p.y) != time - startTime2.get(p.x).get(p.y)
-          && time - startTime2.get(p.x).get(p.y) < 20) {
-        dfs(p, time - startTime2.get(p.x).get(p.y), gameMap);
-      }
       if (enemyCountCurrent % 2 == 1) {
+        int newCycleTime = time - startTime1.get(p.x).get(p.y);
+        if (enemyCountCurrent >= 3 && newCycleTime != cycle.get(p.x).get(p.y) && newCycleTime < 20
+            && newCycleTime % 2 == 0) {
+          dfs(p, newCycleTime, gameMap);
+        }
         startTime1.get(p.x).set(p.y, time);
       }
       if (enemyCountCurrent % 2 == 0) {
+        int newCycleTime = time - startTime2.get(p.x).get(p.y);
+        if (enemyCountCurrent >= 4 && newCycleTime != cycle.get(p.x).get(p.y) && newCycleTime < 20
+            && newCycleTime % 2 == 0) {
+          dfs(p, newCycleTime, gameMap);
+        }
         startTime2.get(p.x).set(p.y, time);
       }
     }
