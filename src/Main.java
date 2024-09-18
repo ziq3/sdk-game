@@ -571,8 +571,8 @@ public class Main {
                     if ((me.getHp() + item.getHealingHP() <= 105 || me.getHp() <= 55)
                             && maxTimeUsage >= item.getUsageTime()) {
                         useItem(item.getId());
-                        listHealing.remove(item);
                         stepHealing = item.getUsageTime();
+                        listHealing.remove(item);
                         return true;
                     }
                 }
