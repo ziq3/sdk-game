@@ -49,9 +49,10 @@ public class Utils {
         if (gun == null && melee == null)
             return Integer.MAX_VALUE;
         if (gun == null)
-            return (health + melee.getDamage() - 1) / melee.getDamage() * melee.getCooldown();
+            return (health + melee.getDamage() - 1) / melee.getDamage() * melee.getCooldown()
+                    - (melee.getCooldown() - 1);
         if (melee == null)
-            return (health + gun.getDamage() - 1) / gun.getDamage() * gun.getCooldown();
+            return (health + gun.getDamage() - 1) / gun.getDamage() * gun.getCooldown() - (gun.getCooldown() - 1);
         int diffCooldown = melee.getCooldown() - gun.getCooldown();
         health -= melee.getDamage();
         if (health <= 0)

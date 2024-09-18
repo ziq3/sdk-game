@@ -37,8 +37,8 @@ public class TrackPlayer {
         playerGuns.set(i, null);
       }
     }
-    List<Weapon> currentGuns = gameMap.getListWeapons();
-    List<Weapon> currentMelees = gameMap.getListWeapons();
+    List<Weapon> currentGuns = gameMap.getAllGun();
+    List<Weapon> currentMelees = gameMap.getAllMelee();
     for (Weapon weapon : currentGuns) {
       isWeapon[weapon.x][weapon.y] = true;
     }
