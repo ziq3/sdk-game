@@ -547,15 +547,21 @@ public class Main {
             boolean tryHealth() {
                 int timeToReach = Integer.MAX_VALUE;
                 if (!otherPlayers.isEmpty()) {
-                    Node nearestPlayerReal = otherPlayers.getFirst();
-                    for (Node p : otherPlayers) {
+                    Player nearestPlayerReal = otherPlayers.getFirst();
+                    for (Player p : otherPlayers) {
                         if (Utils.distance(p, me, gameMap) < Utils.distance(nearestPlayerReal, me, gameMap)) {
                             nearestPlayerReal = p;
                         }
                     }
                     int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
                     int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
-                    timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 4);
+                    int indexPlayer = trackPlayer.getIndexByName(nearestPlayerReal.getPlayerName());
+                    if (trackPlayer.playerMelees.get(indexPlayer) != null) {
+                        timeToReach = diffX + diffY - 1;
+                    }
+                    if (trackPlayer.playerGuns.get(indexPlayer) != null) {
+                        timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 3);
+                    }
                 }
                 int maxTimeUsage = timeToReach;
                 if (haveGun && haveMelee) {
