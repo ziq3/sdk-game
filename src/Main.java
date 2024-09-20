@@ -201,14 +201,21 @@ public class Main {
                 }
 
                 restrictedNodesWithoutPlayers.addAll(restrictedNodes);
-                for (Node p : otherPlayers) {
+                for (Player p : otherPlayers) {
                     restrictedNodes.add(p);
+                    int indexPlayer = trackPlayer.getIndexByName(p.getPlayerName());
+                    if (trackPlayer.playerMelees.get(indexPlayer) == null
+                            && trackPlayer.playerGuns.get(indexPlayer) == null) {
+                        continue;
+                    }
                     for (int i = 0; i < 4; ++i) {
                         Node nearPlayer = new Node(p.getX(), p.getY());
                         // gun.range()-1
                         for (int j = 0; j < 3; ++j) {
                             nearPlayer = Utils.add(nearPlayer, DIRECTIONS.get(i));
                             restrictedNodes.add(nearPlayer);
+                            if (trackPlayer.playerGuns.get(indexPlayer) == null)
+                                break;
                         }
                     }
                 }
@@ -457,7 +464,6 @@ public class Main {
                         nextToChest.add(Utils.add(p, DIRECTIONS.get(i)));
                     }
                 }
-                List<Node> nextToPlayer = new ArrayList<>();
                 Node nearestNextToChest = nearestNode(nextToChest);
                 Player nearestPlayer = null;
                 Node nearestNextToPlayer = null;

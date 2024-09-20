@@ -67,12 +67,17 @@ public class TrackPlayer {
     previousGuns = currentGuns;
   }
 
-  int getStepToKill(String name, int health) {
+  int getIndexByName(String name) {
     for (int i = 0; i < playerName.size(); i++) {
       if (playerName.get(i).equals(name)) {
-        return Utils.stepToKill(playerGuns.get(i), playerMelees.get(i), health);
+        return i;
       }
     }
-    return 0;
+    return -1;
+  }
+
+  int getStepToKill(String name, int health) {
+    int indexPlayer = getIndexByName(name);
+    return Utils.stepToKill(playerGuns.get(indexPlayer), playerMelees.get(indexPlayer), health);
   }
 }
