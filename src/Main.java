@@ -123,7 +123,7 @@ public class Main {
                 if (time == 0) {
                     trackPlayer.init(gameMap.getOtherPlayerInfo());
                 }
-                int currentDarkSide=gameMap.getDarkAreaSize();
+                int currentDarkSide = gameMap.getDarkAreaSize();
                 if (currentDarkSide != previousDarkSide) {
                     gameMap.setDarkAreaSize(currentDarkSide + 1);
                 }
@@ -459,8 +459,8 @@ public class Main {
                 }
                 List<Node> nextToPlayer = new ArrayList<>();
                 Node nearestNextToChest = nearestNode(nextToChest);
-                Player nearestPlayer = otherPlayers.getFirst();
-                Node nearestNextToPlayer = nearestNode(nextToPlayer);
+                Player nearestPlayer = null;
+                Node nearestNextToPlayer = null;
                 for (Player p : otherPlayers) {
                     if (!Utils.isInsideSafeArea(p, gameMap))
                         continue;
