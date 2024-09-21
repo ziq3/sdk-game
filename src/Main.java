@@ -343,7 +343,7 @@ public class Main {
             int getPointHealth(int health) {
                 if (listHealing.size() == 4)
                     return 0;
-                double urgencyFactor = 1 + (100.0 - me.getHp()) / 15;
+                double urgencyFactor = 2 + (100.0 - me.getHp()) / 15;
                 return (int) (health * 100 * urgencyFactor);
             }
 
@@ -545,7 +545,11 @@ public class Main {
             }
 
             boolean tryHealth() {
+                if (listHealing.isEmpty()) {
+                    return false;
+                }
                 int timeToReach = Integer.MAX_VALUE;
+                int maxDame = 0;
                 if (!otherPlayers.isEmpty()) {
                     Player nearestPlayerReal = otherPlayers.getFirst();
                     for (Player p : otherPlayers) {
@@ -556,11 +560,16 @@ public class Main {
                     int diffX = Math.abs(nearestPlayerReal.getX() - me.getX());
                     int diffY = Math.abs(nearestPlayerReal.getY() - me.getY());
                     int indexPlayer = trackPlayer.getIndexByName(nearestPlayerReal.getPlayerName());
-                    if (trackPlayer.playerMelees.get(indexPlayer) != null) {
+                    Weapon playerMelee = trackPlayer.playerMelees.get(indexPlayer);
+                    Weapon playerGun = trackPlayer.playerGuns.get(indexPlayer);
+                    if (playerMelee != null) {
                         timeToReach = diffX + diffY - 1;
                     }
-                    if (trackPlayer.playerGuns.get(indexPlayer) != null) {
+                    if (playerGun != null) {
                         timeToReach = Math.min(diffX, diffY) + Math.max(0, Math.max(diffX, diffY) - 3);
+                    }
+                    if (timeToReach <= 4) {
+                        maxDame = Utils.getDame(playerGun) + Utils.getDame(playerMelee);
                     }
                 }
                 int maxTimeUsage = timeToReach;
@@ -582,13 +591,19 @@ public class Main {
                     }
                     maxTimeUsage = Math.min(maxTimeSafe, timeToReach);
                 }
-                if (!listHealing.isEmpty()) {
-                    listHealing.sort((a, b) -> b.getHealingHP() - a.getHealingHP());
-                }
+                listHealing.sort((a, b) -> b.getHealingHP() - a.getHealingHP());
                 for (HealingItem item : listHealing) {
-                    if ((me.getHp() + item.getHealingHP() <= 105 || me.getHp() <= 55)
-                            && maxTimeUsage >= item.getUsageTime()) {
+                    if (me.getHp() + item.getHealingHP() <= 100 && maxTimeUsage >= item.getUsageTime()) {
                         useItem(item.getId());
+                        stepHealing = item.getUsageTime();
+                        listHealing.remove(item);
+                        return true;
+                    }
+                }
+                if (me.getHp() <= maxDame) {
+                    HealingItem item = listHealing.getLast();
+                    if (maxTimeUsage >= item.getUsageTime()) {
+                        useItem(listHealing.getLast().getId());
                         stepHealing = item.getUsageTime();
                         listHealing.remove(item);
                         return true;
