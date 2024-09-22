@@ -1,3 +1,4 @@
+
 import io.socket.emitter.Emitter;
 import jsclub.codefest2024.sdk.*;
 import jsclub.codefest2024.sdk.algorithm.PathUtils;
@@ -175,8 +176,8 @@ public class Main {
                 enemyMap.calcEnemy(gameMap, time);
                 try {
                     FileWriter writer = new FileWriter(time + ".txt");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
+                    for (int i = 0; i < gameMap.getMapSize(); ++i) {
+                        for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             writer.write((enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
                         }
                         writer.write("\n");
@@ -186,22 +187,22 @@ public class Main {
                 }
                 try {
                     FileWriter writer = new FileWriter(time + "x.txt");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
+                    for (int i = 0; i < gameMap.getMapSize(); ++i) {
+                        for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             writer.write(enemyMap.cycle.get(i).get(j) + " ");
                         }
                         writer.write("\n");
                     }
                     writer.write("\n");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
+                    for (int i = 0; i < gameMap.getMapSize(); ++i) {
+                        for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             writer.write(enemyMap.startTime1.get(i).get(j) + " ");
                         }
                         writer.write("\n");
                     }
                     writer.write("\n");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
+                    for (int i = 0; i < gameMap.getMapSize(); ++i) {
+                        for (int j = 0; j < gameMap.getMapSize(); ++j) {
                             writer.write(enemyMap.startTime2.get(i).get(j) + " ");
                         }
                         writer.write("\n");
