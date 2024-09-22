@@ -1,3 +1,4 @@
+
 import io.socket.emitter.Emitter;
 import jsclub.codefest2024.sdk.*;
 import jsclub.codefest2024.sdk.algorithm.PathUtils;
@@ -14,7 +15,7 @@ import java.io.*;
 
 public class Main {
     private static final String SERVER_URL = "http://192.168.50.20";
-    private static final String GAME_ID = "18130";
+    private static final String GAME_ID = "104475";
     private static final String PLAYER_NAME = "BurnedBing";
     private static final String PLAYER_KEY = "9576b1db-2ac8-4534-80da-21feec8bba8d";
     private static final List<Node> DIRECTIONS = Arrays.asList(new Node(0, 1), new Node(0, -1), new Node(1, 0),
@@ -246,7 +247,19 @@ public class Main {
                 }
                 return g.get(p.x).get(p.y);
             }
-
+            boolean trapInMid(Node x, Node y, List<Obstacle> listTraps,List<Obstacle> listChest) {
+                for(Obstacle mid : listTraps){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                        return true;
+                    }
+                }
+                for(Obstacle mid : listChest){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                        return true;
+                    }
+                }
+                return false;
+            }
             <T extends Node> T nearestNode(List<T> nodes) {
                 if (nodes.isEmpty()) {
                     return null;
@@ -621,6 +634,7 @@ public class Main {
                 if (haveGun && gunCooldown <= 0) {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - me.x) == 0 && Math.abs(p.y - me.y) <= gun.getRange()) {
+                            if(trapInMid(me,p,gameMap.getListTraps(),gameMap.getListChests())) continue;
                             if (p.y < me.getY()) {
                                 shoot("d");
                             } else {
@@ -629,6 +643,8 @@ public class Main {
                             return;
                         }
                         if (Math.abs(p.y - me.y) == 0 && Math.abs(p.x - me.x) <= gun.getRange()) {
+                            if(trapInMid(me,p,gameMap.getListTraps(),gameMap.getListChests())) continue;
+
                             if (p.x < me.getX()) {
                                 shoot("l");
                             } else {
