@@ -249,12 +249,12 @@ public class Main {
             }
             boolean trapInMid(Node x, Node y, List<Obstacle> listTraps,List<Obstacle> listChest) {
                 for(Obstacle mid : listTraps){
-                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<=Utils.distance(x, y,gameMap)){
                         return true;
                     }
                 }
                 for(Obstacle mid : listChest){
-                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<=Utils.distance(x, y,gameMap)){
                         return true;
                     }
                 }
