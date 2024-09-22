@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +40,7 @@ public class Utils {
 
     static int distance(Node p1, Node p2, GameMap gameMap) {
         if (p1 == null || p2 == null || !isInsideSafeArea(p1, gameMap) || !isInsideSafeArea(p2, gameMap)) {
-            return Integer.MAX_VALUE;
+            return 123456;
         }
         return Math.abs(p1.getX() - p2.getX()) + Math.abs(p1.getY() - p2.getY());
     }
@@ -56,7 +57,7 @@ public class Utils {
 
     static int stepToKill(Weapon gun, Weapon melee, int health) {
         if (gun == null && melee == null)
-            return Integer.MAX_VALUE;
+            return 123456;
         if (gun == null)
             return (health + melee.getDamage() - 1) / melee.getDamage() * melee.getCooldown()
                     - (melee.getCooldown() - 1);
