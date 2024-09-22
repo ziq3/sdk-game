@@ -13,10 +13,10 @@ import java.util.*;
 import java.io.*;
 
 public class Main {
-    private static final String SERVER_URL = "https://cf-server.jsclub.dev";
-    private static final String GAME_ID = "191492";
-    private static final String PLAYER_NAME = "test-01";
-    private static final String PLAYER_KEY = "x";
+    private static final String SERVER_URL = "http://192.168.50.20";
+    private static final String GAME_ID = "18130";
+    private static final String PLAYER_NAME = "BurnedBing";
+    private static final String PLAYER_KEY = "9576b1db-2ac8-4534-80da-21feec8bba8d";
     private static final List<Node> DIRECTIONS = Arrays.asList(new Node(0, 1), new Node(0, -1), new Node(1, 0),
             new Node(-1, 0));
     private static final List<Node> DIRECTIONS_REVERSE = Arrays.asList(new Node(0, -1), new Node(0, 1), new Node(-1, 0),
@@ -63,6 +63,7 @@ public class Main {
             void attack(String x) {
                 System.out.println("Attack");
                 meleeCooldown = melee.getCooldown();
+                gunCooldown=0;
                 try {
                     hero.attack(x);
                 } catch (Exception ignored) {
@@ -72,6 +73,7 @@ public class Main {
 
             void shoot(String x) {
                 gunCooldown = gun.getCooldown();
+                meleeCooldown=0;
                 if (me.getBulletNum() == 1) {
                     haveGun = false;
                     gun = null;
@@ -150,42 +152,6 @@ public class Main {
                     listHealing.clear();
                 }
                 enemyMap.calcEnemy(gameMap, time);
-                try {
-                    FileWriter writer = new FileWriter(time + ".txt");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
-                            writer.write((enemyMap.isBlock(time, new Node(i, j), gameMap) ? 1 : 0) + " ");
-                        }
-                        writer.write("\n");
-                    }
-                    writer.close();
-                } catch (IOException e) {
-                }
-                try {
-                    FileWriter writer = new FileWriter(time + "x.txt");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
-                            writer.write(enemyMap.cycle.get(i).get(j) + " ");
-                        }
-                        writer.write("\n");
-                    }
-                    writer.write("\n");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
-                            writer.write(enemyMap.startTime1.get(i).get(j) + " ");
-                        }
-                        writer.write("\n");
-                    }
-                    writer.write("\n");
-                    for (int i = 0; i < 120; ++i) {
-                        for (int j = 0; j < 120; ++j) {
-                            writer.write(enemyMap.startTime2.get(i).get(j) + " ");
-                        }
-                        writer.write("\n");
-                    }
-                    writer.close();
-                } catch (IOException e) {
-                }
                 for (int i = 0; i < gameMap.getMapSize(); ++i) {
                     for (int j = 0; j < gameMap.getMapSize(); ++j) {
                         if (enemyMap.isBlock(time + 1, new Node(i, j), gameMap)) {
