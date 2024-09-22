@@ -45,7 +45,19 @@ public class Main {
             int stepHealing = 0;
             String previousMove = "u";
             int timeLoop = 0;
-
+            boolean trapInMid(Node x, Node y, List<Obstacle> listTraps,List<Obstacle> listChest) {
+                for(Obstacle mid : listTraps){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                        return true;
+                    }
+                }
+                for(Obstacle mid : listChest){
+                    if(Utils.distance(x,mid,gameMap)+Utils.distance(mid,y,gameMap)<Utils.distance(x, y,gameMap)){
+                        return true;
+                    }
+                }
+                return false;
+            }
             void getItem(Node target) {
                 if (Utils.equal(me, target)) {
                     pickupItem();
@@ -678,6 +690,7 @@ public class Main {
                 if (haveGun && gunCooldown <= 0) {
                     for (Node p : otherPlayers) {
                         if (Math.abs(p.x - me.x) == 0 && Math.abs(p.y - me.y) <= gun.getRange()) {
+                            if(trapInMid(p,me,gameMap.getListTraps(),gameMap.getListChests()))continue;
                             if (p.y < me.getY()) {
                                 shoot("d");
                             } else {
@@ -686,6 +699,7 @@ public class Main {
                             return;
                         }
                         if (Math.abs(p.y - me.y) == 0 && Math.abs(p.x - me.x) <= gun.getRange()) {
+                            if(trapInMid(p,me,gameMap.getListTraps(),gameMap.getListChests()))continue;
                             if (p.x < me.getX()) {
                                 shoot("l");
                             } else {
