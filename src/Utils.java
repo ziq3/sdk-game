@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,8 +23,17 @@ public class Utils {
     static Node add(Node x, Node y) {
         return new Node(x.getX() + y.getX(), x.getY() + y.getY());
     }
-
+    static Node multiply(Node x, int time)
+    {
+        Node ans=new Node(0,0);
+        for(int i=1;i<=time;i++)
+        {
+            ans=add(ans,x);
+        }
+        return ans;
+    }
     static boolean isValid(Node p, GameMap gameMap) {
+
         int mapSize = gameMap.getMapSize();
         return p.getX() >= 0 && p.getX() < mapSize && p.getY() >= 0 && p.getY() < mapSize;
     }
@@ -47,6 +57,23 @@ public class Utils {
 
     static int stepToKill(Weapon gun, Weapon melee, int health) {
         if (gun == null && melee == null)
-            return package gamecodefest2024;
+            return 123456;
+        if (gun == null)
+            return (health + melee.getDamage() - 1) / melee.getDamage() * melee.getCooldown()
+                    - (melee.getCooldown() - 1);
+        if (melee == null)
+            return (health + gun.getDamage() - 1) / gun.getDamage() * gun.getCooldown() - (gun.getCooldown() - 1);
+        int diffCooldown = melee.getCooldown() - gun.getCooldown();
+        health -= melee.getDamage();
+        if (health <= 0)
+            return 1;
+        health -= gun.getDamage();
+        if (health <= 0)
+            return 2;
+        health -= gun.getDamage();
+        if (health <= 0)
+            return 2 + gun.getCooldown();
+        health -= melee.getDamage();
+        return 1 + gun.getCooldown() + diffCooldown;
     }
 }
